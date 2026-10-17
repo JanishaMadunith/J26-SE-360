@@ -1,0 +1,38 @@
+# CODEOWNERS — GitHub asks these people to review PRs that touch each path.
+# Later rules override earlier ones. Replace the placeholder handles with real GitHub usernames:
+#   @dilsara-gh      G.W.D.D.N. Kumarasinghe  (M3, tech lead)
+#   @jayatilake-gh   J.D. Jayatilake          (M1)
+#   @samarathunga-gh J.M. Samarathunga        (M2)
+#   @gunaweera-gh    T.C. Gunaweera           (M4)
+
+# Default: tech lead reviews anything not covered below
+*                                   @dilsara-gh
+
+# Shared foundations — everyone reviews
+/contracts/                         @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+/docker-compose.yml                 @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+/.github/                           @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+/docs/adr/                          @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+/docs/open-issues.md                @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+
+# Core API
+/backend/                           @dilsara-gh
+
+# Module services
+/services/m1-affective-state/       @jayatilake-gh
+/services/m2-wellness-prediction/   @samarathunga-gh
+/services/m3-schedule-optimizer/    @dilsara-gh
+/services/m4-food-recommendation/   @gunaweera-gh
+
+# Mobile app — shared, with feature folders owned per module
+/mobile/                            @dilsara-gh @jayatilake-gh @samarathunga-gh @gunaweera-gh
+/mobile/wellness_app/lib/sensing/                                @jayatilake-gh @dilsara-gh
+/mobile/wellness_app/android/app/src/main/kotlin/                @jayatilake-gh @dilsara-gh
+/mobile/wellness_app/lib/features/ppg_measure/                   @jayatilake-gh
+/mobile/wellness_app/lib/features/check_in/                      @jayatilake-gh @samarathunga-gh
+/mobile/wellness_app/lib/features/home_dashboard/                @samarathunga-gh @dilsara-gh
+/mobile/wellness_app/lib/features/schedule/                      @dilsara-gh
+/mobile/wellness_app/lib/features/tasks/                         @dilsara-gh
+/mobile/wellness_app/lib/features/meals/                         @gunaweera-gh
+/mobile/wellness_app/lib/core/                                   @dilsara-gh
+/mobile/wellness_app/lib/data/                                   @dilsara-gh

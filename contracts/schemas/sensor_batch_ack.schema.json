@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "accepted": {
+      "title": "Accepted",
+      "type": "boolean"
+    },
+    "batch_id": {
+      "format": "uuid",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "title": "Counts",
+      "type": "object"
+    },
+    "duplicate": {
+      "default": false,
+      "title": "Duplicate",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "batch_id",
+    "accepted"
+  ],
+  "title": "SensorBatchAck",
+  "type": "object"
+}

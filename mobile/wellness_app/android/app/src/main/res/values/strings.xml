@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="typing_service_label">Wellness typing rhythm</string>
+    <string name="typing_service_description">Records only WHEN keys are pressed and whether each was a letter, digit, space, punctuation or delete, for the J26-SE-360 wellness study. It never records what you type and ignores password fields.</string>
+</resources>

@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=8.2
+ruff>=0.6
+httpx2>=2.13    # FastAPI TestClient with Starlette >= 1.0 (httpx is already in requirements.txt)

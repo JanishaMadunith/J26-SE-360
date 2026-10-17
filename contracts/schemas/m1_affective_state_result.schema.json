@@ -1,0 +1,111 @@
+{
+  "$defs": {
+    "AffectiveLabel": {
+      "description": "Affective states from the Topic Assessment Form (section 7).\nOPEN ISSUE: some team documents use three classes \u2014 agree the final set, then update here only.",
+      "enum": [
+        "stress",
+        "relaxed",
+        "happy",
+        "sad",
+        "anxiety"
+      ],
+      "title": "AffectiveLabel",
+      "type": "string"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "confidence": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "features": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "description": "Features M1 extracted on the server, e.g. hr_bpm, hrv_rmssd_ms, typing_speed_kpm",
+      "title": "Features",
+      "type": "object"
+    },
+    "label": {
+      "$ref": "#/$defs/AffectiveLabel"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelInfo"
+    },
+    "probabilities": {
+      "additionalProperties": {
+        "maximum": 1.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "propertyNames": {
+        "$ref": "#/$defs/AffectiveLabel"
+      },
+      "title": "Probabilities",
+      "type": "object"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "window_end": {
+      "format": "date-time",
+      "title": "Window End",
+      "type": "string"
+    },
+    "window_start": {
+      "format": "date-time",
+      "title": "Window Start",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "window_start",
+    "window_end",
+    "label",
+    "probabilities",
+    "confidence",
+    "model"
+  ],
+  "title": "AffectiveStateResult",
+  "type": "object"
+}

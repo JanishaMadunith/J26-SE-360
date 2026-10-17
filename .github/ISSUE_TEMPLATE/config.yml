@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Open team decisions
+    url: https://github.com/OWNER/J26-SE-360/blob/main/docs/open-issues.md
+    about: Check here before raising a question the team is already discussing.

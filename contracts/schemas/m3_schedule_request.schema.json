@@ -1,0 +1,393 @@
+{
+  "$defs": {
+    "BusyBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "label": {
+          "default": "busy",
+          "title": "Label",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "BusyBlock",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "SchedulableTask": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/TaskCategory"
+        },
+        "deadline": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deadline"
+        },
+        "estimated_minutes": {
+          "minimum": 5,
+          "title": "Estimated Minutes",
+          "type": "integer"
+        },
+        "fixed_end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixed End"
+        },
+        "fixed_start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixed Start"
+        },
+        "priority": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "times_rescheduled": {
+          "default": 0,
+          "title": "Times Rescheduled",
+          "type": "integer"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "category",
+        "estimated_minutes",
+        "priority"
+      ],
+      "title": "SchedulableTask",
+      "type": "object"
+    },
+    "TaskCategory": {
+      "enum": [
+        "study",
+        "work",
+        "exercise",
+        "chores",
+        "personal",
+        "social",
+        "other"
+      ],
+      "title": "TaskCategory",
+      "type": "string"
+    },
+    "UserHistory": {
+      "additionalProperties": false,
+      "description": "Behaviour summary the completion model uses (computed by the core API from the task-event log).",
+      "properties": {
+        "on_time_rate_30d": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "On Time Rate 30D"
+        },
+        "on_time_rate_by_category": {
+          "additionalProperties": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          "default": {},
+          "propertyNames": {
+            "$ref": "#/$defs/TaskCategory"
+          },
+          "title": "On Time Rate By Category",
+          "type": "object"
+        },
+        "tasks_completed_30d": {
+          "default": 0,
+          "title": "Tasks Completed 30D",
+          "type": "integer"
+        },
+        "tasks_missed_30d": {
+          "default": 0,
+          "title": "Tasks Missed 30D",
+          "type": "integer"
+        }
+      },
+      "title": "UserHistory",
+      "type": "object"
+    },
+    "WellnessForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "sleep_hours_last_night": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sleep Hours Last Night"
+        },
+        "slot_minutes": {
+          "title": "Slot Minutes",
+          "type": "integer"
+        },
+        "slots": {
+          "items": {
+            "$ref": "#/$defs/WellnessSlot"
+          },
+          "title": "Slots",
+          "type": "array"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "generated_at",
+        "slot_minutes",
+        "slots",
+        "model"
+      ],
+      "title": "WellnessForecast",
+      "type": "object"
+    },
+    "WellnessSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "burnout_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Burnout Risk",
+          "type": "number"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "energy": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Energy",
+          "type": "number"
+        },
+        "focus": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Focus",
+          "type": "number"
+        },
+        "mental_fatigue": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mental Fatigue",
+          "type": "number"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "mental_fatigue",
+        "focus",
+        "energy",
+        "burnout_risk"
+      ],
+      "title": "WellnessSlot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "busy": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/BusyBlock"
+      },
+      "title": "Busy",
+      "type": "array"
+    },
+    "day_end_hour": {
+      "default": 22,
+      "maximum": 24,
+      "minimum": 1,
+      "title": "Day End Hour",
+      "type": "integer"
+    },
+    "day_start_hour": {
+      "default": 7,
+      "description": "Earliest hour to place flexible tasks",
+      "maximum": 23,
+      "minimum": 0,
+      "title": "Day Start Hour",
+      "type": "integer"
+    },
+    "history": {
+      "$ref": "#/$defs/UserHistory",
+      "default": {
+        "on_time_rate_30d": null,
+        "on_time_rate_by_category": {},
+        "tasks_completed_30d": 0,
+        "tasks_missed_30d": 0
+      }
+    },
+    "horizon_end": {
+      "format": "date-time",
+      "title": "Horizon End",
+      "type": "string"
+    },
+    "horizon_start": {
+      "format": "date-time",
+      "title": "Horizon Start",
+      "type": "string"
+    },
+    "reason": {
+      "default": "scheduled",
+      "examples": [
+        "scheduled",
+        "task_added",
+        "overload_predicted",
+        "task_missed"
+      ],
+      "title": "Reason",
+      "type": "string"
+    },
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/SchedulableTask"
+      },
+      "title": "Tasks",
+      "type": "array"
+    },
+    "timezone": {
+      "default": "Asia/Colombo",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "wellness": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WellnessForecast"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "If missing, M3 uses a neutral profile"
+    }
+  },
+  "required": [
+    "user_id",
+    "as_of",
+    "horizon_start",
+    "horizon_end",
+    "tasks"
+  ],
+  "title": "ScheduleRequest",
+  "type": "object"
+}

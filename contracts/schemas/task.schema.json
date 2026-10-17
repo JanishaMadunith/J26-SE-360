@@ -1,0 +1,143 @@
+{
+  "$defs": {
+    "TaskCategory": {
+      "enum": [
+        "study",
+        "work",
+        "exercise",
+        "chores",
+        "personal",
+        "social",
+        "other"
+      ],
+      "title": "TaskCategory",
+      "type": "string"
+    },
+    "TaskStatus": {
+      "enum": [
+        "pending",
+        "scheduled",
+        "done",
+        "missed",
+        "cancelled"
+      ],
+      "title": "TaskStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "$ref": "#/$defs/TaskCategory",
+      "default": "other"
+    },
+    "completed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Completed At"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline"
+    },
+    "estimated_minutes": {
+      "maximum": 720,
+      "minimum": 5,
+      "title": "Estimated Minutes",
+      "type": "integer"
+    },
+    "fixed_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fixed End"
+    },
+    "fixed_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set for fixed events (e.g. a lecture)",
+      "title": "Fixed Start"
+    },
+    "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "priority": {
+      "default": 3,
+      "description": "1 = lowest, 5 = highest",
+      "maximum": 5,
+      "minimum": 1,
+      "title": "Priority",
+      "type": "integer"
+    },
+    "status": {
+      "$ref": "#/$defs/TaskStatus"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "estimated_minutes",
+    "id",
+    "status",
+    "created_at"
+  ],
+  "title": "Task",
+  "type": "object"
+}

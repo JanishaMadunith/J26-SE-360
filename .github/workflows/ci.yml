@@ -1,0 +1,225 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ------------------------------------------------------------------ what changed?
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.filter.outputs.changes }}
+      contracts: ${{ steps.filter.outputs.contracts }}
+      core: ${{ steps.filter.outputs.core }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      docker: ${{ steps.filter.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # a contract change re-tests every consumer
+          filters: |
+            contracts:
+              - 'contracts/**'
+            core:
+              - 'backend/core-api/**'
+              - 'contracts/**'
+            m1:
+              - 'services/m1-affective-state/**'
+              - 'contracts/**'
+            m2:
+              - 'services/m2-wellness-prediction/**'
+              - 'contracts/**'
+            m3:
+              - 'services/m3-schedule-optimizer/**'
+              - 'contracts/**'
+            m4:
+              - 'services/m4-food-recommendation/**'
+              - 'contracts/**'
+            mobile:
+              - 'mobile/**'
+              - 'contracts/schemas/**'
+            docker:
+              - 'docker-compose.yml'
+              - '**/Dockerfile'
+              - '.env.example'
+              - 'backend/**'
+              - 'services/**'
+              - 'contracts/**'
+
+  # ------------------------------------------------------------------ contracts
+  contracts:
+    needs: changes
+    if: needs.changes.outputs.contracts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - run: pip install -e contracts ruff pytest
+      - name: Lint
+        run: ruff check contracts
+      - name: JSON Schemas are up to date (run `make contracts` if this fails)
+        run: python contracts/export_schemas.py --check
+      - name: Contract tests (if any)
+        run: if [ -d contracts/tests ]; then python -m pytest -q contracts/tests; else echo "no contract tests yet"; fi
+
+  # ------------------------------------------------------------------ core API
+  core-api:
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: wellness
+          POSTGRES_PASSWORD: wellness_ci_pw
+          POSTGRES_DB: wellness_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wellness"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: backend/core-api
+    env:
+      JWT_SECRET: ci-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        run: |
+          pip install -e ../../contracts
+          pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Tests on SQLite (fast, in-memory)
+        run: python -m pytest -q
+      - name: Migrations on PostgreSQL
+        env:
+          DATABASE_URL: postgresql+psycopg://wellness:wellness_ci_pw@localhost:5432/wellness_test
+        run: alembic upgrade head
+      - name: Tests on PostgreSQL
+        env:
+          # tests read TEST_DATABASE_URL (never DATABASE_URL) so they can't wipe a dev database
+          TEST_DATABASE_URL: postgresql+psycopg://wellness:wellness_ci_pw@localhost:5432/wellness_test
+        run: python -m pytest -q
+
+  # ------------------------------------------------------------------ module services
+  services:
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - key: m1
+            dir: services/m1-affective-state
+          - key: m2
+            dir: services/m2-wellness-prediction
+          - key: m3
+            dir: services/m3-schedule-optimizer
+          - key: m4
+            dir: services/m4-food-recommendation
+    name: service (${{ matrix.key }})
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - name: Skip if unchanged
+        if: ${{ !contains(fromJSON(needs.changes.outputs.changes), matrix.key) }}
+        working-directory: .
+        run: echo "${{ matrix.key }} unchanged — skipping"
+      - uses: actions/checkout@v4
+        if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
+      - name: Check the service exists on this branch
+        id: present
+        if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
+        working-directory: .
+        run: |
+          if [ -f "${{ matrix.dir }}/requirements.txt" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "${{ matrix.dir }} is not on this branch yet — skipping"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.present.outputs.ok == 'true'
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install
+        if: steps.present.outputs.ok == 'true'
+        run: |
+          pip install -e ../../contracts
+          pip install -r requirements-dev.txt
+      - name: Lint
+        if: steps.present.outputs.ok == 'true'
+        run: ruff check .
+      - name: Tests
+        if: steps.present.outputs.ok == 'true'
+        run: python -m pytest -q
+
+  # ------------------------------------------------------------------ mobile
+  mobile:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile/wellness_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Unit and widget tests
+        run: flutter test
+      # Building an APK needs the platform files generated by `flutter create` (android/ gradle wrapper etc.)
+      # to be committed. Until they are, this step is skipped.
+      - uses: actions/setup-java@v4
+        if: github.ref == 'refs/heads/main' && hashFiles('mobile/wellness_app/android/gradlew') != ''
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Debug APK (main only)
+        if: github.ref == 'refs/heads/main' && hashFiles('mobile/wellness_app/android/gradlew') != ''
+        run: flutter build apk --debug
+
+  # ------------------------------------------------------------------ docker
+  docker:
+    needs: changes
+    if: needs.changes.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose file is valid
+        run: |
+          cp .env.example .env
+          docker compose config -q
+      - name: Build all images (main only)
+        if: github.ref == 'refs/heads/main'
+        run: docker compose build

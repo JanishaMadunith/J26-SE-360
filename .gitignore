@@ -1,0 +1,99 @@
+# ---------- secrets / local config
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+key.properties
+google-services.json
+
+# ---------- data & research artifacts (never commit data — see CONTRIBUTING §9)
+07-datasets/
+/data/
+services/*/data/
+backend/*/data/
+*.csv
+*.csv.gz
+*.tsv
+*.parquet
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.h5
+*.db
+*.sqlite
+*.sqlite3
+# tiny hand-made test fixtures are allowed
+!**/tests/fixtures/**
+# trained models: keep only the model card (scoped to services so code folders named "models" are unaffected)
+services/*/models/*
+!services/*/models/model_card.json
+!services/*/models/.gitkeep
+# training reports can be large; keep markdown + figures, drop raw prediction dumps
+services/*/reports/*.csv.gz
+
+# ---------- Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+mlruns/
+
+# ---------- Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/build/
+*.g.dart.bak
+coverage/
+
+# ---------- Android / Gradle
+.gradle/
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+*.apk
+*.aab
+*.iml
+.cxx/
+.externalNativeBuild/
+
+# ---------- iOS (not targeted, but keep generated noise out)
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+
+# ---------- IDEs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# ---------- OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- logs
+*.log
+logs/

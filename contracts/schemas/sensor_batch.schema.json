@@ -1,0 +1,467 @@
+{
+  "$defs": {
+    "ActivityTransition": {
+      "additionalProperties": false,
+      "properties": {
+        "activity": {
+          "$ref": "#/$defs/ActivityType"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "entering": {
+          "description": "True when the activity starts, False when it ends",
+          "title": "Entering",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "at",
+        "activity",
+        "entering"
+      ],
+      "title": "ActivityTransition",
+      "type": "object"
+    },
+    "ActivityType": {
+      "enum": [
+        "still",
+        "walking",
+        "running",
+        "on_bicycle",
+        "in_vehicle",
+        "unknown"
+      ],
+      "title": "ActivityType",
+      "type": "string"
+    },
+    "AppCategory": {
+      "description": "Android ApplicationInfo categories plus 'unknown'.",
+      "enum": [
+        "game",
+        "audio",
+        "video",
+        "image",
+        "social",
+        "news",
+        "maps",
+        "productivity",
+        "accessibility",
+        "unknown"
+      ],
+      "title": "AppCategory",
+      "type": "string"
+    },
+    "AppUsageSession": {
+      "additionalProperties": false,
+      "properties": {
+        "app_hash": {
+          "description": "Salted SHA-256 of the package name (prefix)",
+          "maxLength": 64,
+          "minLength": 8,
+          "title": "App Hash",
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/AppCategory"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "category",
+        "app_hash"
+      ],
+      "title": "AppUsageSession",
+      "type": "object"
+    },
+    "KeyClass": {
+      "enum": [
+        "letter",
+        "digit",
+        "space",
+        "backspace",
+        "enter",
+        "punctuation",
+        "other"
+      ],
+      "title": "KeyClass",
+      "type": "string"
+    },
+    "KeystrokeEvent": {
+      "additionalProperties": false,
+      "description": "Timing of one key press. No character is ever recorded.",
+      "properties": {
+        "down_at": {
+          "format": "date-time",
+          "title": "Down At",
+          "type": "string"
+        },
+        "hold_ms": {
+          "description": "Key-down to key-up time",
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Hold Ms",
+          "type": "integer"
+        },
+        "key_class": {
+          "$ref": "#/$defs/KeyClass"
+        }
+      },
+      "required": [
+        "down_at",
+        "hold_ms",
+        "key_class"
+      ],
+      "title": "KeystrokeEvent",
+      "type": "object"
+    },
+    "LightReading": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "lux": {
+          "minimum": 0,
+          "title": "Lux",
+          "type": "number"
+        }
+      },
+      "required": [
+        "at",
+        "lux"
+      ],
+      "title": "LightReading",
+      "type": "object"
+    },
+    "PPGRecording": {
+      "additionalProperties": false,
+      "description": "One camera heart-rate measurement (finger over camera + flash). Arrays are column-wise and equal length.",
+      "properties": {
+        "blue": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Blue",
+          "type": "array"
+        },
+        "fps": {
+          "description": "Camera frame rate the values were sampled at",
+          "exclusiveMinimum": 0,
+          "maximum": 240,
+          "title": "Fps",
+          "type": "number"
+        },
+        "green": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Green",
+          "type": "array"
+        },
+        "red": {
+          "description": "Mean red channel value per frame (0-255)",
+          "items": {
+            "type": "number"
+          },
+          "title": "Red",
+          "type": "array"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "t_ms": {
+          "description": "Milliseconds since started_at for each frame",
+          "items": {
+            "type": "integer"
+          },
+          "title": "T Ms",
+          "type": "array"
+        },
+        "torch_on": {
+          "default": true,
+          "title": "Torch On",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "started_at",
+        "fps",
+        "t_ms",
+        "red",
+        "green",
+        "blue"
+      ],
+      "title": "PPGRecording",
+      "type": "object"
+    },
+    "ScreenEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ScreenEventType"
+        }
+      },
+      "required": [
+        "at",
+        "type"
+      ],
+      "title": "ScreenEvent",
+      "type": "object"
+    },
+    "ScreenEventType": {
+      "enum": [
+        "screen_on",
+        "screen_off",
+        "unlock"
+      ],
+      "title": "ScreenEventType",
+      "type": "string"
+    },
+    "SelfReport": {
+      "additionalProperties": false,
+      "description": "Short in-app check-in. Used as ground-truth labels when training Modules 1 and 2.",
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "energy": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Energy"
+        },
+        "focus": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Focus"
+        },
+        "mood": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mood"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 280,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "stress": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stress"
+        }
+      },
+      "required": [
+        "at"
+      ],
+      "title": "SelfReport",
+      "type": "object"
+    },
+    "StepCount": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "steps": {
+          "minimum": 0,
+          "title": "Steps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "steps"
+      ],
+      "title": "StepCount",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One upload from the phone. `batch_id` makes uploads idempotent (re-sending the same batch is safe).",
+  "properties": {
+    "activity": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ActivityTransition"
+      },
+      "title": "Activity",
+      "type": "array"
+    },
+    "app_usage": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/AppUsageSession"
+      },
+      "title": "App Usage",
+      "type": "array"
+    },
+    "app_version": {
+      "maxLength": 32,
+      "title": "App Version",
+      "type": "string"
+    },
+    "batch_id": {
+      "format": "uuid",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "collected_from": {
+      "format": "date-time",
+      "title": "Collected From",
+      "type": "string"
+    },
+    "collected_to": {
+      "format": "date-time",
+      "title": "Collected To",
+      "type": "string"
+    },
+    "device_id": {
+      "maxLength": 64,
+      "minLength": 4,
+      "title": "Device Id",
+      "type": "string"
+    },
+    "keystrokes": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/KeystrokeEvent"
+      },
+      "title": "Keystrokes",
+      "type": "array"
+    },
+    "light": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LightReading"
+      },
+      "title": "Light",
+      "type": "array"
+    },
+    "ppg": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PPGRecording"
+      },
+      "title": "Ppg",
+      "type": "array"
+    },
+    "screen_events": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ScreenEvent"
+      },
+      "title": "Screen Events",
+      "type": "array"
+    },
+    "self_reports": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SelfReport"
+      },
+      "title": "Self Reports",
+      "type": "array"
+    },
+    "steps": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/StepCount"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "timezone": {
+      "examples": [
+        "Asia/Colombo"
+      ],
+      "title": "Timezone",
+      "type": "string"
+    }
+  },
+  "required": [
+    "batch_id",
+    "device_id",
+    "app_version",
+    "timezone",
+    "collected_from",
+    "collected_to"
+  ],
+  "title": "SensorBatch",
+  "type": "object"
+}

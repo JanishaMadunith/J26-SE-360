@@ -1,0 +1,54 @@
+# Dependabot — kept quiet on purpose:
+#  * pip/pub use `increase-if-necessary`: our requirements use ">=" ranges, so a PR is opened only when a new
+#    version does NOT fit the current range (no PRs just to raise minimum versions).
+#  * Everything in one folder is grouped into a single monthly PR, at most one open PR per folder.
+#  * Security alerts/updates are separate (repo Settings -> Code security) and are not affected by this file.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /contracts
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /backend/core-api
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /services/m1-affective-state
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /services/m2-wellness-prediction
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /services/m3-schedule-optimizer
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pip
+    directory: /services/m4-food-recommendation
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: pub
+    directory: /mobile/wellness_app
+    schedule: { interval: monthly }
+    versioning-strategy: increase-if-necessary
+    open-pull-requests-limit: 1
+    groups: { dart: { patterns: ["*"] } }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { actions: { patterns: ["*"] } }

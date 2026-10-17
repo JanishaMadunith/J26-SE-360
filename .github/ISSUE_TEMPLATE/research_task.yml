@@ -1,0 +1,36 @@
+name: Research task
+description: An experiment, dataset, literature or evaluation task
+title: "research(<scope>): "
+labels: ["research"]
+body:
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options: [M1 affective state, M2 wellness, M3 schedule, M4 food, whole framework]
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Research question or hypothesis
+      placeholder: e.g. Does adding HRV features improve stress detection F1 over typing features alone?
+    validations:
+      required: true
+  - type: textarea
+    id: method
+    attributes:
+      label: Method
+      description: Data, model or approach, and how you will evaluate it (metric, split, baseline).
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data used
+      description: Dataset name and location under 07-datasets. Never attach data to the issue.
+  - type: textarea
+    id: result
+    attributes:
+      label: Result (fill in when done)
+      description: Numbers, link to notebook or report, decision taken.

@@ -1,0 +1,164 @@
+{
+  "$defs": {
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "ScheduledItem": {
+      "additionalProperties": false,
+      "properties": {
+        "completion_probability": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Completion Probability",
+          "type": "number"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "is_fixed": {
+          "default": false,
+          "title": "Is Fixed",
+          "type": "boolean"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "start",
+        "end",
+        "completion_probability"
+      ],
+      "title": "ScheduledItem",
+      "type": "object"
+    },
+    "UnscheduledTask": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "examples": [
+            "no_free_slot_before_deadline",
+            "deadline_passed"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "reason"
+      ],
+      "title": "UnscheduledTask",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "at_risk_task_ids": {
+      "default": [],
+      "description": "Completion probability below the risk threshold",
+      "items": {
+        "format": "uuid",
+        "type": "string"
+      },
+      "title": "At Risk Task Ids",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "horizon_end": {
+      "format": "date-time",
+      "title": "Horizon End",
+      "type": "string"
+    },
+    "horizon_start": {
+      "format": "date-time",
+      "title": "Horizon Start",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ScheduledItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelInfo"
+    },
+    "overload_predicted": {
+      "default": false,
+      "title": "Overload Predicted",
+      "type": "boolean"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "unscheduled": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/UnscheduledTask"
+      },
+      "title": "Unscheduled",
+      "type": "array"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "generated_at",
+    "horizon_start",
+    "horizon_end",
+    "items",
+    "reason",
+    "model"
+  ],
+  "title": "ScheduleResult",
+  "type": "object"
+}
