@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -102,7 +102,7 @@ jobs:
       JWT_SECRET: ci-secret
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -151,7 +151,7 @@ jobs:
         run: echo "${{ matrix.key }} unchanged — skipping"
       - uses: actions/checkout@v4
         if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
         with:
           python-version: ${{ env.PYTHON_VERSION }}
