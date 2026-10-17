@@ -1,0 +1,5 @@
+# Test configuration only (dependencies: requirements.txt; lint/format: ../../ruff.toml).
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["tests"]
+addopts = "-q"

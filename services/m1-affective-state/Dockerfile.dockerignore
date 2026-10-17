@@ -1,0 +1,17 @@
+# Used by BuildKit for services/m1-affective-state/Dockerfile (build context = repo root): send only what the image needs.
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.env
+.git
+mobile
+backend
+docs
+scripts
+services/*
+!services/m1-affective-state
+services/m1-affective-state/notebooks
+services/m1-affective-state/reports
+services/m1-affective-state/tests

@@ -1,0 +1,118 @@
+# J26-SE-360 — full local stack.  Start:  cp .env.example .env && make up
+#
+#   postgres :5432   TimescaleDB (PostgreSQL 16)      core-api :8000   FastAPI core (auth, tasks, sensing, pipeline)
+#   redis    :6379   cache / fallback                 m1..m4   :8101–8104 module services (stateless)
+#
+# All images are built from the repo root so every service can install the shared /contracts package.
+
+name: j26-se-360
+
+x-module-service: &module-service
+  restart: unless-stopped
+  env_file: .env
+  networks: [backend]
+
+x-healthcheck: &py-health
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 20s
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wellness}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wellness_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-wellness}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wellness} -d ${POSTGRES_DB:-wellness}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [backend]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  core-api:
+    build:
+      context: .
+      dockerfile: backend/core-api/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      m1-affective-state:
+        condition: service_started
+      m2-wellness-prediction:
+        condition: service_started
+      m4-food-recommendation:
+        condition: service_started
+    healthcheck:
+      <<: *py-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+    networks: [backend]
+
+  m1-affective-state:
+    <<: *module-service
+    build:
+      context: .
+      dockerfile: services/m1-affective-state/Dockerfile
+    ports:
+      - "8101:8101"
+    healthcheck:
+      <<: *py-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8101/health', timeout=4).status == 200 else 1)"]
+
+  m2-wellness-prediction:
+    <<: *module-service
+    build:
+      context: .
+      dockerfile: services/m2-wellness-prediction/Dockerfile
+    ports:
+      - "8102:8102"
+    healthcheck:
+      <<: *py-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8102/health', timeout=4).status == 200 else 1)"]
+
+  m4-food-recommendation:
+    <<: *module-service
+    build:
+      context: .
+      dockerfile: services/m4-food-recommendation/Dockerfile
+    ports:
+      - "8104:8104"
+    healthcheck:
+      <<: *py-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8104/health', timeout=4).status == 200 else 1)"]
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  backend:

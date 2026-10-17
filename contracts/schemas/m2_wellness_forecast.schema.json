@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "WellnessSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "burnout_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Burnout Risk",
+          "type": "number"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "energy": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Energy",
+          "type": "number"
+        },
+        "focus": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Focus",
+          "type": "number"
+        },
+        "mental_fatigue": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mental Fatigue",
+          "type": "number"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "mental_fatigue",
+        "focus",
+        "energy",
+        "burnout_risk"
+      ],
+      "title": "WellnessSlot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelInfo"
+    },
+    "sleep_hours_last_night": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sleep Hours Last Night"
+    },
+    "slot_minutes": {
+      "title": "Slot Minutes",
+      "type": "integer"
+    },
+    "slots": {
+      "items": {
+        "$ref": "#/$defs/WellnessSlot"
+      },
+      "title": "Slots",
+      "type": "array"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "generated_at",
+    "slot_minutes",
+    "slots",
+    "model"
+  ],
+  "title": "WellnessForecast",
+  "type": "object"
+}

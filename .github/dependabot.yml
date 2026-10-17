@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Python — one entry per requirements.txt / pyproject
+  - package-ecosystem: pip
+    directory: /contracts
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /backend/core-api
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /services/m1-affective-state
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /services/m2-wellness-prediction
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /services/m3-schedule-optimizer
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+  - package-ecosystem: pip
+    directory: /services/m4-food-recommendation
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+
+  # Flutter / Dart
+  - package-ecosystem: pub
+    directory: /mobile/wellness_app
+    schedule: { interval: monthly }
+    groups: { minor-and-patch: { update-types: [minor, patch] } }
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }

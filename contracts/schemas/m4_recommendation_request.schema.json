@@ -1,0 +1,478 @@
+{
+  "$defs": {
+    "AffectiveLabel": {
+      "description": "Affective states from the Topic Assessment Form (section 7).\nOPEN ISSUE: some team documents use three classes \u2014 agree the final set, then update here only.",
+      "enum": [
+        "stress",
+        "relaxed",
+        "happy",
+        "sad",
+        "anxiety"
+      ],
+      "title": "AffectiveLabel",
+      "type": "string"
+    },
+    "AffectiveStateResult": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "features": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default": {},
+          "description": "Features M1 extracted on the server, e.g. hr_bpm, hrv_rmssd_ms, typing_speed_kpm",
+          "title": "Features",
+          "type": "object"
+        },
+        "label": {
+          "$ref": "#/$defs/AffectiveLabel"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "probabilities": {
+          "additionalProperties": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/AffectiveLabel"
+          },
+          "title": "Probabilities",
+          "type": "object"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "window_start",
+        "window_end",
+        "label",
+        "probabilities",
+        "confidence",
+        "model"
+      ],
+      "title": "AffectiveStateResult",
+      "type": "object"
+    },
+    "DietProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "allergies": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Allergies",
+          "type": "array"
+        },
+        "daily_calorie_target": {
+          "anyOf": [
+            {
+              "maximum": 5000,
+              "minimum": 800,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Daily Calorie Target"
+        },
+        "dislikes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Dislikes",
+          "type": "array"
+        },
+        "halal": {
+          "default": false,
+          "title": "Halal",
+          "type": "boolean"
+        },
+        "health_conditions": {
+          "default": [],
+          "description": "e.g. diabetes, hypertension \u2014 user-provided",
+          "items": {
+            "type": "string"
+          },
+          "title": "Health Conditions",
+          "type": "array"
+        },
+        "vegan": {
+          "default": false,
+          "title": "Vegan",
+          "type": "boolean"
+        },
+        "vegetarian": {
+          "default": false,
+          "title": "Vegetarian",
+          "type": "boolean"
+        }
+      },
+      "title": "DietProfile",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "ScheduleResult": {
+      "additionalProperties": false,
+      "properties": {
+        "at_risk_task_ids": {
+          "default": [],
+          "description": "Completion probability below the risk threshold",
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "At Risk Task Ids",
+          "type": "array"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "horizon_end": {
+          "format": "date-time",
+          "title": "Horizon End",
+          "type": "string"
+        },
+        "horizon_start": {
+          "format": "date-time",
+          "title": "Horizon Start",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ScheduledItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "overload_predicted": {
+          "default": false,
+          "title": "Overload Predicted",
+          "type": "boolean"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "unscheduled": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/UnscheduledTask"
+          },
+          "title": "Unscheduled",
+          "type": "array"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "generated_at",
+        "horizon_start",
+        "horizon_end",
+        "items",
+        "reason",
+        "model"
+      ],
+      "title": "ScheduleResult",
+      "type": "object"
+    },
+    "ScheduledItem": {
+      "additionalProperties": false,
+      "properties": {
+        "completion_probability": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Completion Probability",
+          "type": "number"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "is_fixed": {
+          "default": false,
+          "title": "Is Fixed",
+          "type": "boolean"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "start",
+        "end",
+        "completion_probability"
+      ],
+      "title": "ScheduledItem",
+      "type": "object"
+    },
+    "UnscheduledTask": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "examples": [
+            "no_free_slot_before_deadline",
+            "deadline_passed"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "task_id": {
+          "format": "uuid",
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "reason"
+      ],
+      "title": "UnscheduledTask",
+      "type": "object"
+    },
+    "WellnessForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "sleep_hours_last_night": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sleep Hours Last Night"
+        },
+        "slot_minutes": {
+          "title": "Slot Minutes",
+          "type": "integer"
+        },
+        "slots": {
+          "items": {
+            "$ref": "#/$defs/WellnessSlot"
+          },
+          "title": "Slots",
+          "type": "array"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "generated_at",
+        "slot_minutes",
+        "slots",
+        "model"
+      ],
+      "title": "WellnessForecast",
+      "type": "object"
+    },
+    "WellnessSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "burnout_risk": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Burnout Risk",
+          "type": "number"
+        },
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "energy": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Energy",
+          "type": "number"
+        },
+        "focus": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Focus",
+          "type": "number"
+        },
+        "mental_fatigue": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mental Fatigue",
+          "type": "number"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "mental_fatigue",
+        "focus",
+        "energy",
+        "burnout_risk"
+      ],
+      "title": "WellnessSlot",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "affective_state": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AffectiveStateResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "profile": {
+      "$ref": "#/$defs/DietProfile",
+      "default": {
+        "allergies": [],
+        "daily_calorie_target": null,
+        "dislikes": [],
+        "halal": false,
+        "health_conditions": [],
+        "vegan": false,
+        "vegetarian": false
+      }
+    },
+    "schedule": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ScheduleResult"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "timezone": {
+      "default": "Asia/Colombo",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "wellness": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/WellnessForecast"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "user_id",
+    "as_of"
+  ],
+  "title": "RecommendationRequest",
+  "type": "object"
+}

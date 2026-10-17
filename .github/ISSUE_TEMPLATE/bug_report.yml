@@ -1,0 +1,40 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+title: "fix(<scope>): "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where is the bug?
+      options: [core API, M1 affective state, M2 wellness, M3 schedule, M4 food, mobile app, contracts, docs / CI]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. make up
+        2. POST /v1/...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Paste relevant output. Remove tokens, passwords and any participant data.
+      render: shell
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or branch
+      placeholder: main @ abc1234

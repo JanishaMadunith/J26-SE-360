@@ -1,0 +1,17 @@
+# Used by BuildKit for services/m4-food-recommendation/Dockerfile (build context = repo root): send only what the image needs.
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.env
+.git
+mobile
+backend
+docs
+scripts
+services/*
+!services/m4-food-recommendation
+services/m4-food-recommendation/notebooks
+services/m4-food-recommendation/reports
+services/m4-food-recommendation/tests

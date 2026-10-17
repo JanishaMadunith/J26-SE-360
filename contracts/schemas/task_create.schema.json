@@ -1,0 +1,103 @@
+{
+  "$defs": {
+    "TaskCategory": {
+      "enum": [
+        "study",
+        "work",
+        "exercise",
+        "chores",
+        "personal",
+        "social",
+        "other"
+      ],
+      "title": "TaskCategory",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "$ref": "#/$defs/TaskCategory",
+      "default": "other"
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline"
+    },
+    "estimated_minutes": {
+      "maximum": 720,
+      "minimum": 5,
+      "title": "Estimated Minutes",
+      "type": "integer"
+    },
+    "fixed_end": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fixed End"
+    },
+    "fixed_start": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set for fixed events (e.g. a lecture)",
+      "title": "Fixed Start"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "priority": {
+      "default": 3,
+      "description": "1 = lowest, 5 = highest",
+      "maximum": 5,
+      "minimum": 1,
+      "title": "Priority",
+      "type": "integer"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "estimated_minutes"
+  ],
+  "title": "TaskCreate",
+  "type": "object"
+}

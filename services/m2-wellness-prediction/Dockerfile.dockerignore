@@ -1,0 +1,17 @@
+# Used by BuildKit for services/m2-wellness-prediction/Dockerfile (build context = repo root): send only what the image needs.
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.env
+.git
+mobile
+backend
+docs
+scripts
+services/*
+!services/m2-wellness-prediction
+services/m2-wellness-prediction/notebooks
+services/m2-wellness-prediction/reports
+services/m2-wellness-prediction/tests

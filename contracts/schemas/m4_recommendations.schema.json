@@ -1,0 +1,197 @@
+{
+  "$defs": {
+    "FoodItem": {
+      "additionalProperties": false,
+      "properties": {
+        "calories": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calories"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "portion": {
+          "title": "Portion",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "portion",
+        "reason"
+      ],
+      "title": "FoodItem",
+      "type": "object"
+    },
+    "MealRecommendation": {
+      "additionalProperties": false,
+      "properties": {
+        "foods": {
+          "items": {
+            "$ref": "#/$defs/FoodItem"
+          },
+          "title": "Foods",
+          "type": "array"
+        },
+        "meal_type": {
+          "$ref": "#/$defs/MealType"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "meal_type",
+        "window_start",
+        "window_end",
+        "foods",
+        "rationale"
+      ],
+      "title": "MealRecommendation",
+      "type": "object"
+    },
+    "MealType": {
+      "enum": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack"
+      ],
+      "title": "MealType",
+      "type": "string"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "SuggestedActivity": {
+      "additionalProperties": false,
+      "description": "M4 'Part B'. Shown to the user only. If the user accepts, the app creates a normal task and M3\nschedules it on its next run \u2014 so data never flows back from M4 into M3 directly (no circular dependency).",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/TaskCategory"
+        },
+        "estimated_minutes": {
+          "maximum": 240,
+          "minimum": 5,
+          "title": "Estimated Minutes",
+          "type": "integer"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "category",
+        "estimated_minutes",
+        "reason"
+      ],
+      "title": "SuggestedActivity",
+      "type": "object"
+    },
+    "TaskCategory": {
+      "enum": [
+        "study",
+        "work",
+        "exercise",
+        "chores",
+        "personal",
+        "social",
+        "other"
+      ],
+      "title": "TaskCategory",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "meals": {
+      "items": {
+        "$ref": "#/$defs/MealRecommendation"
+      },
+      "title": "Meals",
+      "type": "array"
+    },
+    "model": {
+      "$ref": "#/$defs/ModelInfo"
+    },
+    "suggested_activities": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SuggestedActivity"
+      },
+      "title": "Suggested Activities",
+      "type": "array"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "generated_at",
+    "meals",
+    "model"
+  ],
+  "title": "Recommendations",
+  "type": "object"
+}

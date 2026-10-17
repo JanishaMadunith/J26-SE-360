@@ -1,0 +1,40 @@
+name: Feature / task
+description: New functionality or an implementation task
+title: "feat(<scope>): "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options: [core API, M1 affective state, M2 wellness, M3 schedule, M4 food, mobile app, contracts, docs / CI]
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be possible when this is done, and why it matters for the project.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of done
+      placeholder: |
+        - [ ] Endpoint returns ...
+        - [ ] Tests cover ...
+        - [ ] Docs updated
+    validations:
+      required: true
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract impact
+      options:
+        - label: This needs a change in `contracts/` (all owners must review)
+  - type: input
+    id: milestone
+    attributes:
+      label: Target date / milestone
+      placeholder: e.g. Progress Presentation 2

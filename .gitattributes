@@ -1,0 +1,35 @@
+# Normalise line endings to LF in the repo (Windows teammates keep CRLF out of commits)
+* text=auto eol=lf
+
+# Scripts must stay LF even on Windows checkouts
+*.sh   text eol=lf
+gradlew text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Notebooks: treat as text but show readable diffs
+*.ipynb text diff=jupyternotebook
+
+# Binary files
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.jar  binary
+*.so   binary
+*.ttf  binary
+*.otf  binary
+*.tflite binary
+*.onnx binary
+*.joblib binary
+*.pkl  binary
+
+# Generated files — collapse in GitHub diffs
+contracts/schemas/*.json linguist-generated=true
+*.g.dart linguist-generated=true
+*.freezed.dart linguist-generated=true

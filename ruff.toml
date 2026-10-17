@@ -1,0 +1,36 @@
+# Shared Python lint/format settings for contracts, backend and services.
+line-length = 120
+target-version = "py312"
+extend-exclude = ["**/notebooks/**", "**/alembic/versions/**", "mobile/**"]
+
+[lint]
+select = [
+  "E", "W",   # pycodestyle
+  "F",        # pyflakes
+  "I",        # import sorting
+  "B",        # bugbear
+  "UP",       # pyupgrade
+  "SIM",      # simplify
+  "C4",       # comprehensions
+  "N",        # naming
+  "RUF",      # ruff-specific
+]
+ignore = [
+  "B008",     # FastAPI uses function calls in defaults (Depends)
+  "N805",     # pydantic validators use cls
+  "RUF012",   # mutable class defaults are fine on pydantic models
+  "E501",     # formatter handles line length
+  "UP042",    # (str, Enum) is intentional: StrEnum changes str() output used in JSON/DB values
+  "RUF100",   # noqa comments kept for editors that don't read per-file-ignores
+  "RUF001", "RUF002", "RUF003",  # allow en dashes / arrows in strings and comments (docs-style text)
+]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["B011", "N802"]
+"**/__init__.py" = ["F401", "F403"]
+
+[lint.isort]
+known-first-party = ["wellness_contracts", "app", "m1_affect", "m2_wellness", "m3", "m4_food"]
+
+[format]
+quote-style = "double"

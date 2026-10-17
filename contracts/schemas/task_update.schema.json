@@ -1,0 +1,123 @@
+{
+  "$defs": {
+    "TaskCategory": {
+      "enum": [
+        "study",
+        "work",
+        "exercise",
+        "chores",
+        "personal",
+        "social",
+        "other"
+      ],
+      "title": "TaskCategory",
+      "type": "string"
+    },
+    "TaskStatus": {
+      "enum": [
+        "pending",
+        "scheduled",
+        "done",
+        "missed",
+        "cancelled"
+      ],
+      "title": "TaskStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TaskCategory"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "deadline": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline"
+    },
+    "estimated_minutes": {
+      "anyOf": [
+        {
+          "maximum": 720,
+          "minimum": 5,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Estimated Minutes"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    },
+    "priority": {
+      "anyOf": [
+        {
+          "maximum": 5,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Priority"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TaskStatus"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "title": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Title"
+    }
+  },
+  "title": "TaskUpdate",
+  "type": "object"
+}

@@ -1,0 +1,436 @@
+{
+  "$defs": {
+    "ActivityTransition": {
+      "additionalProperties": false,
+      "properties": {
+        "activity": {
+          "$ref": "#/$defs/ActivityType"
+        },
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "entering": {
+          "description": "True when the activity starts, False when it ends",
+          "title": "Entering",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "at",
+        "activity",
+        "entering"
+      ],
+      "title": "ActivityTransition",
+      "type": "object"
+    },
+    "ActivityType": {
+      "enum": [
+        "still",
+        "walking",
+        "running",
+        "on_bicycle",
+        "in_vehicle",
+        "unknown"
+      ],
+      "title": "ActivityType",
+      "type": "string"
+    },
+    "AffectiveLabel": {
+      "description": "Affective states from the Topic Assessment Form (section 7).\nOPEN ISSUE: some team documents use three classes \u2014 agree the final set, then update here only.",
+      "enum": [
+        "stress",
+        "relaxed",
+        "happy",
+        "sad",
+        "anxiety"
+      ],
+      "title": "AffectiveLabel",
+      "type": "string"
+    },
+    "AffectiveStateResult": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "features": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default": {},
+          "description": "Features M1 extracted on the server, e.g. hr_bpm, hrv_rmssd_ms, typing_speed_kpm",
+          "title": "Features",
+          "type": "object"
+        },
+        "label": {
+          "$ref": "#/$defs/AffectiveLabel"
+        },
+        "model": {
+          "$ref": "#/$defs/ModelInfo"
+        },
+        "probabilities": {
+          "additionalProperties": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/AffectiveLabel"
+          },
+          "title": "Probabilities",
+          "type": "object"
+        },
+        "user_id": {
+          "format": "uuid",
+          "title": "User Id",
+          "type": "string"
+        },
+        "window_end": {
+          "format": "date-time",
+          "title": "Window End",
+          "type": "string"
+        },
+        "window_start": {
+          "format": "date-time",
+          "title": "Window Start",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "window_start",
+        "window_end",
+        "label",
+        "probabilities",
+        "confidence",
+        "model"
+      ],
+      "title": "AffectiveStateResult",
+      "type": "object"
+    },
+    "LightReading": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "lux": {
+          "minimum": 0,
+          "title": "Lux",
+          "type": "number"
+        }
+      },
+      "required": [
+        "at",
+        "lux"
+      ],
+      "title": "LightReading",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "description": "Which model produced an output \u2014 stored with every result so experiments are reproducible.",
+      "properties": {
+        "name": {
+          "examples": [
+            "m3-heuristic"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "examples": [
+            "0.1.0"
+          ],
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "ScreenEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/ScreenEventType"
+        }
+      },
+      "required": [
+        "at",
+        "type"
+      ],
+      "title": "ScreenEvent",
+      "type": "object"
+    },
+    "ScreenEventType": {
+      "enum": [
+        "screen_on",
+        "screen_off",
+        "unlock"
+      ],
+      "title": "ScreenEventType",
+      "type": "string"
+    },
+    "SelfReport": {
+      "additionalProperties": false,
+      "description": "Short in-app check-in. Used as ground-truth labels when training Modules 1 and 2.",
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "title": "At",
+          "type": "string"
+        },
+        "energy": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Energy"
+        },
+        "focus": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Focus"
+        },
+        "mood": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mood"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 280,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "stress": {
+          "anyOf": [
+            {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stress"
+        }
+      },
+      "required": [
+        "at"
+      ],
+      "title": "SelfReport",
+      "type": "object"
+    },
+    "StepCount": {
+      "additionalProperties": false,
+      "properties": {
+        "end": {
+          "format": "date-time",
+          "title": "End",
+          "type": "string"
+        },
+        "start": {
+          "format": "date-time",
+          "title": "Start",
+          "type": "string"
+        },
+        "steps": {
+          "minimum": 0,
+          "title": "Steps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "steps"
+      ],
+      "title": "StepCount",
+      "type": "object"
+    },
+    "WorkloadSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "minutes_due_24h": {
+          "default": 0,
+          "title": "Minutes Due 24H",
+          "type": "integer"
+        },
+        "tasks_due_24h": {
+          "default": 0,
+          "title": "Tasks Due 24H",
+          "type": "integer"
+        },
+        "tasks_overdue": {
+          "default": 0,
+          "title": "Tasks Overdue",
+          "type": "integer"
+        },
+        "tasks_pending": {
+          "default": 0,
+          "title": "Tasks Pending",
+          "type": "integer"
+        }
+      },
+      "title": "WorkloadSummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "activity": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ActivityTransition"
+      },
+      "title": "Activity",
+      "type": "array"
+    },
+    "affective_history": {
+      "default": [],
+      "description": "Last 7 days of M1 outputs",
+      "items": {
+        "$ref": "#/$defs/AffectiveStateResult"
+      },
+      "title": "Affective History",
+      "type": "array"
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "horizon_hours": {
+      "default": 24,
+      "maximum": 72,
+      "minimum": 1,
+      "title": "Horizon Hours",
+      "type": "integer"
+    },
+    "light": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LightReading"
+      },
+      "title": "Light",
+      "type": "array"
+    },
+    "screen_events": {
+      "default": [],
+      "description": "Last 48 h \u2014 for sleep estimation",
+      "items": {
+        "$ref": "#/$defs/ScreenEvent"
+      },
+      "title": "Screen Events",
+      "type": "array"
+    },
+    "self_reports": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SelfReport"
+      },
+      "title": "Self Reports",
+      "type": "array"
+    },
+    "slot_minutes": {
+      "default": 60,
+      "description": "Forecast granularity. Module 3 needs intraday slots (resolves the daily-vs-slot issue).",
+      "maximum": 240,
+      "minimum": 15,
+      "title": "Slot Minutes",
+      "type": "integer"
+    },
+    "steps": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/StepCount"
+      },
+      "title": "Steps",
+      "type": "array"
+    },
+    "timezone": {
+      "default": "Asia/Colombo",
+      "title": "Timezone",
+      "type": "string"
+    },
+    "user_id": {
+      "format": "uuid",
+      "title": "User Id",
+      "type": "string"
+    },
+    "workload": {
+      "$ref": "#/$defs/WorkloadSummary",
+      "default": {
+        "minutes_due_24h": 0,
+        "tasks_due_24h": 0,
+        "tasks_overdue": 0,
+        "tasks_pending": 0
+      }
+    }
+  },
+  "required": [
+    "user_id",
+    "as_of"
+  ],
+  "title": "WellnessForecastRequest",
+  "type": "object"
+}
