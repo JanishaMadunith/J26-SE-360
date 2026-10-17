@@ -1,0 +1,6 @@
+# Runtime dependencies for SERVING (the shared `wellness-contracts` package is installed separately).
+# Training/research dependencies are in requirements-train.txt.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic-settings>=2.4
+tzdata

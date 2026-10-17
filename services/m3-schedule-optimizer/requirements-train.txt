@@ -1,0 +1,8 @@
+# Research / training dependencies for src/m3 (OULAD completion model). Not needed to run the service.
+pandas>=2.2
+numpy>=1.26
+scikit-learn>=1.5
+lightgbm>=4.5
+xgboost>=2.1
+optuna>=4.0
+matplotlib>=3.8

@@ -1,0 +1,17 @@
+# Used by BuildKit for services/m3-schedule-optimizer/Dockerfile (build context = repo root): send only what the image needs.
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.env
+.git
+mobile
+backend
+docs
+scripts
+services/*
+!services/m3-schedule-optimizer
+services/m3-schedule-optimizer/notebooks
+services/m3-schedule-optimizer/reports
+services/m3-schedule-optimizer/tests
