@@ -26,7 +26,7 @@ jobs:
       mobile: ${{ steps.filter.outputs.mobile }}
       docker: ${{ steps.filter.outputs.docker }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -66,7 +66,7 @@ jobs:
     if: needs.changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -101,7 +101,7 @@ jobs:
     env:
       JWT_SECRET: ci-secret
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -149,7 +149,7 @@ jobs:
         if: ${{ !contains(fromJSON(needs.changes.outputs.changes), matrix.key) }}
         working-directory: .
         run: echo "${{ matrix.key }} unchanged — skipping"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
       - uses: actions/setup-python@v5
         if: contains(fromJSON(needs.changes.outputs.changes), matrix.key)
@@ -177,7 +177,7 @@ jobs:
       run:
         working-directory: mobile/wellness_app
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -204,7 +204,7 @@ jobs:
     if: needs.changes.outputs.docker == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Compose file is valid
         run: |
           cp .env.example .env
