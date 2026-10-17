@@ -1,5 +1,5 @@
 # Runtime dependencies (the shared `wellness-contracts` package is installed separately — see Dockerfile / make setup)
-fastapi>=0.115
+fastapi>=0.143.0
 uvicorn[standard]>=0.30
 pydantic-settings>=2.4
 numpy>=1.26
