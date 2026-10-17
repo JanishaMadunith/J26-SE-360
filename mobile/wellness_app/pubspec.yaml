@@ -18,8 +18,8 @@ dependencies:
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.3
-  workmanager: ^0.5.2
-  camera: ^0.11.0+2
+  workmanager: ^0.10.10
+  camera: ^0.12.1
   pedometer: ^4.0.2
   light: ^4.0.0
   flutter_activity_recognition: ^4.0.0
@@ -28,7 +28,7 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.5
   uuid: ^4.5.1
-  intl: ^0.19.0
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
