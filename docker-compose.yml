@@ -70,6 +70,8 @@ services:
         condition: service_started
       m2-wellness-prediction:
         condition: service_started
+      m3-schedule-optimizer:
+        condition: service_started
       m4-food-recommendation:
         condition: service_started
     healthcheck:
@@ -98,6 +100,17 @@ services:
     healthcheck:
       <<: *py-health
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8102/health', timeout=4).status == 200 else 1)"]
+
+  m3-schedule-optimizer:
+    <<: *module-service
+    build:
+      context: .
+      dockerfile: services/m3-schedule-optimizer/Dockerfile
+    ports:
+      - "8103:8103"
+    healthcheck:
+      <<: *py-health
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8103/health', timeout=4).status == 200 else 1)"]
 
   m4-food-recommendation:
     <<: *module-service
