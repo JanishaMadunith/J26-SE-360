@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 3 Demo</title>
+<style>
+:root {
+  --bg: #f5f7f8; --surface: #fff; --fg: #15222a; --muted: #5b6b74; --line: #d8e0e4;
+  --accent: #0f7c86; --accent-soft: #e0f1f2; --good: #2e7d4f; --good-soft: #e3f3e8;
+  --risk: #c2410c; --risk-soft: #fdebe0; --mid: #b7791f; --mid-soft: #fbf1dc; --busy: #e3e8eb;
+  --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f171c; --surface: #16222a; --fg: #e4ecef; --muted: #9db0ba; --line: #2a3a44;
+    --accent: #4cc3cc; --accent-soft: #123a3e; --good: #6fcf97; --good-soft: #15352a; --risk: #fb8c5a;
+    --risk-soft: #3d2216; --mid: #f0b75a; --mid-soft: #3a2e15; --busy: #24323b; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--font); }
+header { background: var(--surface); border-bottom: 1px solid var(--line); padding: 16px max(16px, env(safe-area-inset-left)); }
+header .in { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+h1 { font-size: 1.35rem; margin: 0; }
+h2 { font-size: 1.1rem; margin: 0 0 8px; }
+h3 { font-size: .98rem; margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px max(16px, env(safe-area-inset-left)) 60px; display: grid; gap: 20px; }
+nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+nav.tabs button { border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 8px 14px; border-radius: 999px; cursor: pointer; font: inherit; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+.panel { display: grid; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+.cases { display: grid; gap: 6px; max-height: 560px; overflow: auto; }
+.case { text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 8px; padding: 8px 10px; cursor: pointer; font: inherit; display: flex; justify-content: space-between; gap: 8px; }
+.case[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.pill { display: inline-block; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.risk { background: var(--risk-soft); color: var(--risk); }
+.pill.mid { background: var(--mid-soft); color: var(--mid); }
+.pill.neutral { background: var(--accent-soft); color: var(--accent); }
+.big { font-size: 2.6rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.meter { height: 12px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 99px; }
+.reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.reasons li { display: grid; grid-template-columns: 1fr 70px 90px; gap: 8px; align-items: center; font-size: .9rem; }
+.bar { height: 8px; border-radius: 4px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.kv div { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.kv b { display: block; font-variant-numeric: tabular-nums; }
+.kv span { font-size: .8rem; color: var(--muted); }
+label.f { display: grid; gap: 4px; font-size: .88rem; }
+label.f output { font-weight: 600; font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+select, input[type="text"], input[type="number"] { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--bg); border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; }
+.tasks-edit { display: grid; gap: 6px; }
+.tasks-edit .t { display: grid; grid-template-columns: 1.6fr 1fr 80px 70px 80px 32px; gap: 6px; align-items: center; }
+.tasks-edit .t.head { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.scroll { overflow-x: auto; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+.err { color: var(--risk); font-weight: 600; }
+@media (max-width: 860px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .tasks-edit .t { grid-template-columns: 1fr 1fr; }
+  .tasks-edit .t.head { display: none; }
+}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div><h1>Module 3 · Predictive Adaptive Schedule Optimization</h1>
+  <div class="muted small">J26-SE-360 · G.W.D.D.N. Kumarasinghe (IT23267336) · live demo of the trained models</div></div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="p1">1 · Will it be done on time?</button>
+    <button role="tab" aria-selected="false" data-tab="p2">2 · Plan my days</button>
+    <button role="tab" aria-selected="false" data-tab="p3">3 · Models &amp; data</button>
+  </nav>
+</div></header>
+
+<main>
+  <!-- ======================= 1. completion model ======================= -->
+  <section class="panel" id="p1">
+    <div class="card">
+      <h2>Completion model on real, unseen cases</h2>
+      <p class="muted small" style="margin:0">Each case is a real student task from the 2014J semester of OULAD, which the model never saw during training or tuning. Pick one to see the model's prediction next to what really happened, and why the model decided that.</p>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Real cases (OULAD 2014J)</h3><div class="cases" id="cases"><span class="muted small">Loading…</span></div></div>
+      <div class="card" id="caseView"><span class="muted">Choose a case.</span></div>
+    </div>
+    <div class="card">
+      <h2>What if…? Try your own user</h2>
+      <p class="muted small" style="margin:0">Move the sliders: the model recalculates the chance that a 2-hour task is finished on time.</p>
+      <div class="grid2" style="grid-template-columns:1fr 1fr">
+        <div style="display:grid;gap:10px">
+          <label class="f">Past tasks finished on time <output id="o_rate"></output><input type="range" id="w_rate" min="0" max="100" value="80"></label>
+          <label class="f">Days since last active <output id="o_days"></output><input type="range" id="w_days" min="0" max="20" value="1"></label>
+          <label class="f">Active days in the last week <output id="o_act"></output><input type="range" id="w_act" min="0" max="7" value="5"></label>
+          <label class="f">Earlier tasks still unfinished <output id="o_unf"></output><input type="range" id="w_unf" min="0" max="5" value="0"></label>
+          <label class="f">Overdue tasks <output id="o_od"></output><input type="range" id="w_od" min="0" max="5" value="0"></label>
+          <label class="f">Days left before the deadline <output id="o_due"></output><input type="range" id="w_due" min="1" max="14" value="3"></label>
+          <label class="f">Priority (1 low – 5 high) <output id="o_pri"></output><input type="range" id="w_pri" min="1" max="5" value="4"></label>
+        </div>
+        <div id="whatif" style="display:grid;gap:12px;align-content:start"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 2. planner ======================= -->
+  <section class="panel" id="p2" hidden>
+    <div class="card">
+      <h2>Plan my days</h2>
+      <p class="muted small" style="margin:0">All models together: the <b>completion model</b> rates each task, the <b>time-of-day model</b> suggests when it fits, a <b>wellness forecast</b> (PMData stand-in for Module 2) gives energy per hour, typical <b>work/class hours</b> come from ATUS, and the <b>scheduler</b> places every task in the slot with the best chance.</p>
+      <div class="row">
+        <label class="f">Who is the user?
+          <select id="persona"><option value="university_student">University student (ATUS)</option><option value="working_adult">Working adult (ATUS)</option><option value="free">No fixed hours</option></select></label>
+        <label class="f">Wellness (PMData)
+          <select id="wday"><option value="good">Good days</option><option value="typical" selected>Typical days</option><option value="hard">Hard days</option></select></label>
+        <label class="f">Past on-time rate
+          <select id="prate"><option value="0.9">90% (reliable)</option><option value="0.7" selected>70%</option><option value="0.4">40% (often late)</option></select></label>
+        <label class="f">Days to plan
+          <select id="ndays"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+      </div>
+      <div class="tasks-edit" id="taskEdit"></div>
+      <div class="row"><button class="ghost" id="addTask">+ Add task</button><button class="primary" id="planBtn">Make my plan</button><span id="planMsg" class="small muted"></span></div>
+    </div>
+    <div class="card" id="planOut" hidden>
+      <div class="legend"><span><i style="background:var(--busy)"></i>work / class (ATUS)</span><span><i style="background:var(--good)"></i>likely on time</span><span><i style="background:var(--mid)"></i>uncertain</span><span><i style="background:var(--risk)"></i>at risk</span><span><i style="background:var(--accent)"></i>energy (wellness forecast)</span></div>
+      <div class="scroll" id="timeline"></div>
+      <div id="wsrc" class="small muted"></div>
+      <div class="scroll"><table id="planTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ======================= 3. models ======================= -->
+  <section class="panel" id="p3" hidden>
+    <div class="card">
+      <h2>What runs behind this page</h2>
+      <div class="scroll"><table>
+        <tr><th>Part</th><th>Data</th><th>Method</th><th>Result</th></tr>
+        <tr><td><b>Completion model</b></td><td>OULAD, 663,420 cases from 32,593 students</td><td>XGBoost, Optuna-tuned, time-based split</td><td>83.4% accuracy, ROC-AUC 0.916 (majority guess 52.7%); time CV 84.0% ± 1.4</td></tr>
+        <tr><td><b>Time-of-day model</b></td><td>MS-LaTTE, 10,101 to-do titles, 5 annotators each</td><td>TF-IDF + logistic regression</td><td id="ttres">53.7% (4 classes; most-common guess 41.6%), top-2 82.8%</td></tr>
+        <tr><td><b>Wellness stand-in</b></td><td>PMData, 1,724 days from 16 people</td><td>daily level × time-of-day alertness curve</td><td>Hourly energy / focus / fatigue in Module 2's format</td></tr>
+        <tr><td><b>Busy hours</b></td><td>ATUS 2025 weekday diaries</td><td>survey-weighted share at work / class / travel</td><td id="atusres">Default work and class hours per persona</td></tr>
+        <tr><td><b>Wellness evidence</b></td><td>StudentLife, 44 students, 10 weeks</td><td>within-student deadline load vs. stress and sleep</td><td>+0.18 stress and −0.25 h sleep per extra deadline</td></tr>
+        <tr><td><b>Scheduler</b></td><td>—</td><td>energy-aware greedy placement on a 15-min grid</td><td>Next: OR-Tools CP-SAT optimiser and simulation</td></tr>
+      </table></div>
+      <div id="status" class="small muted"></div>
+      <div class="row small"><a href="/docs" target="_blank">API (/docs)</a><a href="/health" target="_blank">/health</a></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const pct = (p) => Math.round(p * 100) + "%";
+const level = (p) => (p >= 0.65 ? "good" : p >= 0.45 ? "mid" : "risk");
+const word = { good: "Likely on time", mid: "Uncertain", risk: "At risk" };
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+}
+document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("nav.tabs button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("section.panel").forEach((s) => (s.hidden = s.id !== b.dataset.tab));
+}));
+
+function reasonsHTML(rs) {
+  const max = Math.max(...rs.map((r) => Math.abs(r.effect)), 0.01);
+  return `<ul class="reasons">${rs.map((r) => `<li><span>${r.label}</span><span class="small muted">${r.value === null ? "unknown" : (typeof r.value === "number" ? +r.value.toFixed(2) : r.value)}</span>
+    <span title="${r.direction} the chance"><div class="bar" style="width:${Math.max(6, (Math.abs(r.effect) / max) * 90)}px;background:var(--${r.effect > 0 ? "good" : "risk"})"></div><span class="small">${r.direction}</span></span></li>`).join("")}</ul>`;
+}
+function probHTML(p, label) {
+  const l = level(p);
+  return `<div class="row" style="justify-content:space-between"><span class="big" style="color:var(--${l})">${pct(p)}</span><span class="pill ${l}">${label || word[l]}</span></div>
+    <div class="meter"><i style="width:${pct(p)};background:var(--${l})"></i></div>`;
+}
+
+// ---------- 1. real cases
+let cases = [];
+async function showCase(c, btn) {
+  document.querySelectorAll(".case").forEach((x) => x.setAttribute("aria-current", x === btn));
+  const v = $("#caseView");
+  v.innerHTML = '<span class="muted">Predicting…</span>';
+  try {
+    const r = await api("/v1/completion/predict", { features: c.features });
+    const right = (r.prediction === "on time") === c.actual_on_time;
+    const s = c.summary;
+    v.innerHTML = `<h3>${c.id} · course ${c.course} · ${c.task}</h3>
+      <div class="small muted">Asked ${c.days_before_deadline} days before the deadline · counts ${c.weight}% of the grade</div>
+      ${probHTML(r.probability_on_time, "Model: " + r.prediction)}
+      <div class="row"><span class="pill ${c.actual_on_time ? "good" : "risk"}">What really happened: ${c.actual_on_time ? "handed in on time" : "not on time"}</span>
+      <span class="pill ${right ? "neutral" : "mid"}">${right ? "✓ model was right" : "✗ model was wrong (it happens 16.6% of the time)"}</span></div>
+      <div class="kv">
+        <div><b>${s.prior_same_type_on_time_rate === null ? "no history" : pct(s.prior_same_type_on_time_rate)}</b><span>past on-time rate (same kind)</span></div>
+        <div><b>${s.days_since_last ?? "—"}</b><span>days since last active</span></div>
+        <div><b>${s.active_7 ?? "—"}</b><span>active days last week</span></div>
+        <div><b>${s.n_prior_outstanding ?? "—"}</b><span>earlier tasks unfinished</span></div>
+      </div>
+      <h3>Why (top reasons, SHAP)</h3>${reasonsHTML(r.reasons)}`;
+  } catch (e) { v.innerHTML = `<span class="err">${e.message}</span>`; }
+}
+api("/v1/completion/examples").then((ex) => {
+  cases = ex;
+  $("#cases").innerHTML = "";
+  ex.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.className = "case";
+    b.innerHTML = `<span><b>${c.id}</b> <span class="small muted">· ${c.course} · ${c.days_before_deadline}d before</span></span><span class="pill ${c.actual_on_time ? "good" : "risk"}">${c.actual_on_time ? "on time" : "not on time"}</span>`;
+    b.onclick = () => showCase(c, b);
+    $("#cases").appendChild(b);
+    if (i === 0) showCase(c, b);
+  });
+}).catch((e) => ($("#cases").innerHTML = `<span class="err">${e.message}</span>`));
+
+// ---------- 1b. what-if
+const sliders = { rate: (v) => v + "%", days: (v) => v, act: (v) => v, unf: (v) => v, od: (v) => v, due: (v) => v, pri: (v) => v };
+let wiTimer;
+function whatIf() {
+  for (const k in sliders) $("#o_" + k).textContent = sliders[k]($("#w_" + k).value);
+  clearTimeout(wiTimer);
+  wiTimer = setTimeout(async () => {
+    const body = {
+      profile: { on_time_rate: $("#w_rate").value / 100, days_since_active: +$("#w_days").value, active_days_7: +$("#w_act").value,
+        unfinished_earlier_tasks: +$("#w_unf").value, overdue_tasks: +$("#w_od").value, tasks_done_before: 8 },
+      task: { title: "task", estimated_minutes: 120, priority: +$("#w_pri").value, due_in_days: +$("#w_due").value },
+    };
+    try {
+      const r = await api("/v1/completion/predict", body);
+      $("#whatif").innerHTML = probHTML(r.probability_on_time) + "<h3>Top reasons</h3>" + reasonsHTML(r.reasons);
+    } catch (e) { $("#whatif").innerHTML = `<span class="err">${e.message}</span>`; }
+  }, 150);
+}
+Object.keys(sliders).forEach((k) => $("#w_" + k).addEventListener("input", whatIf));
+whatIf();
+
+// ---------- 2. planner
+const CATS = ["study", "work", "exercise", "chores", "personal", "social", "other"];
+let tasks = [
+  { title: "Write research report", category: "study", estimated_minutes: 180, priority: 5, due_in_days: 2 },
+  { title: "Read research papers", category: "study", estimated_minutes: 90, priority: 3, due_in_days: 3 },
+  { title: "Go to the gym", category: "exercise", estimated_minutes: 60, priority: 2, due_in_days: 3 },
+  { title: "Team meeting prep", category: "work", estimated_minutes: 45, priority: 4, due_in_days: 1 },
+  { title: "Pay electricity bill", category: "chores", estimated_minutes: 15, priority: 3, due_in_days: 2 },
+  { title: "Call mom", category: "personal", estimated_minutes: 30, priority: 2, due_in_days: 3 },
+];
+function renderTasks() {
+  const el = $("#taskEdit");
+  el.innerHTML = `<div class="t head"><span>Task</span><span>Category</span><span>Minutes</span><span>Priority</span><span>Due in days</span><span></span></div>`;
+  tasks.forEach((t, i) => {
+    const row = document.createElement("div");
+    row.className = "t";
+    row.innerHTML = `<input type="text" id="tt${i}" value="${t.title.replace(/"/g, "&quot;")}" aria-label="task title">
+      <select id="tc${i}" aria-label="category">${CATS.map((c) => `<option ${c === t.category ? "selected" : ""}>${c}</option>`).join("")}</select>
+      <input type="number" id="tm${i}" min="15" max="600" step="15" value="${t.estimated_minutes}" aria-label="minutes">
+      <input type="number" id="tp${i}" min="1" max="5" value="${t.priority}" aria-label="priority">
+      <input type="number" id="td${i}" min="0.25" max="5" step="0.25" value="${t.due_in_days}" aria-label="due in days">
+      <button class="ghost" title="remove" aria-label="remove task">×</button>`;
+    row.querySelector("button").onclick = () => { readTasks(); tasks.splice(i, 1); renderTasks(); };
+    el.appendChild(row);
+  });
+}
+function readTasks() {
+  tasks = tasks.map((t, i) => ({ title: $("#tt" + i).value || "task", category: $("#tc" + i).value, estimated_minutes: +$("#tm" + i).value,
+    priority: +$("#tp" + i).value, due_in_days: +$("#td" + i).value }));
+}
+$("#addTask").onclick = () => { readTasks(); if (tasks.length < 12) tasks.push({ title: "New task", category: "other", estimated_minutes: 60, priority: 3, due_in_days: 2 }); renderTasks(); };
+renderTasks();
+
+const fmtT = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Colombo" });
+const fmtD = (iso) => new Date(iso).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Colombo" });
+function colomboHours(iso) {
+  const d = new Date(new Date(iso).toLocaleString("en-US", { timeZone: "Asia/Colombo" }));
+  return d.getHours() + d.getMinutes() / 60;
+}
+function dayKey(iso) { return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" }); }
+
+function drawTimeline(plan) {
+  const H0 = 6, H1 = 23, W = 980, left = 90, rowH = 64, pxh = (W - left - 10) / (H1 - H0);
+  const days = [...new Set(plan.wellness.hourly.filter((s) => colomboHours(s.start) >= H0 + 1).map((s) => dayKey(s.start)))];
+  const ys = (d) => 26 + days.indexOf(d) * rowH;
+  let svg = `<svg viewBox="0 0 ${W} ${30 + days.length * rowH}" width="${W}" role="img" aria-label="schedule timeline">`;
+  for (let h = H0; h <= H1; h += 2) {
+    const x = left + (h - H0) * pxh;
+    svg += `<line x1="${x}" x2="${x}" y1="18" y2="${26 + days.length * rowH}" stroke="var(--line)"/><text x="${x}" y="13" font-size="11" text-anchor="middle" fill="var(--muted)">${String(h).padStart(2, "0")}:00</text>`;
+  }
+  days.forEach((d) => {
+    const y = ys(d);
+    svg += `<text x="4" y="${y + 30}" font-size="12" fill="var(--fg)" font-weight="600">${fmtD(d + "T12:00:00+05:30")}</text>`;
+    svg += `<rect x="${left}" y="${y + 4}" width="${(H1 - H0) * pxh}" height="${rowH - 10}" fill="none" stroke="var(--line)" rx="6"/>`;
+  });
+  plan.busy.forEach((b) => {
+    const d = dayKey(b.start); if (!days.includes(d)) return;
+    const a = Math.max(H0, colomboHours(b.start)), e = Math.min(H1, colomboHours(b.end) || 24);
+    if (e > a) svg += `<rect x="${left + (a - H0) * pxh}" y="${ys(d) + 4}" width="${(e - a) * pxh}" height="${rowH - 10}" fill="var(--busy)" rx="4"/>`;
+  });
+  days.forEach((d) => {   // energy line
+    const pts = plan.wellness.hourly.filter((s) => dayKey(s.start) === d).map((s) => {
+      const h = colomboHours(s.start) + 0.5; if (h < H0 || h > H1) return null;
+      return `${left + (h - H0) * pxh},${ys(d) + rowH - 8 - s.energy * (rowH - 16)}`; }).filter(Boolean);
+    svg += `<polyline points="${pts.join(" ")}" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3 2" opacity=".8"/>`;
+  });
+  plan.tasks.forEach((t) => t.sessions.forEach((s) => {
+    const d = dayKey(s.start), a = colomboHours(s.start), e = colomboHours(s.end) || 24, l = level(s.p);
+    const x = left + (a - H0) * pxh, w = Math.max(4, (e - a) * pxh);
+    svg += `<g><title>${t.title}: ${fmtT(s.start)}–${fmtT(s.end)}, ${pct(s.p)} chance on time</title>
+      <rect x="${x}" y="${ys(d) + 12}" width="${w}" height="${rowH - 26}" fill="var(--${l})" rx="5" opacity=".9"/>
+      <text x="${x + 4}" y="${ys(d) + 30}" font-size="10.5" fill="var(--bg)" font-weight="600">${w > 40 ? t.title.slice(0, Math.floor(w / 6.2)) : ""}</text>
+      <text x="${x + 4}" y="${ys(d) + 43}" font-size="10" fill="var(--bg)">${w > 34 ? pct(s.p) : ""}</text></g>`;
+  }));
+  return svg + "</svg>";
+}
+
+$("#planBtn").onclick = async () => {
+  readTasks();
+  $("#planMsg").textContent = "Planning…";
+  const rate = +$("#prate").value;
+  try {
+    const plan = await api("/v1/demo/plan", {
+      persona: $("#persona").value, wellness_day: $("#wday").value, days: +$("#ndays").value, tasks,
+      profile: { on_time_rate: rate, tasks_done_before: 8, days_since_active: rate > 0.5 ? 1 : 6, active_days_7: rate > 0.5 ? 5 : 2,
+        unfinished_earlier_tasks: rate > 0.5 ? 0 : 2, overdue_tasks: rate > 0.5 ? 0 : 1, upcoming_deadlines_7d: tasks.length },
+    });
+    $("#planOut").hidden = false;
+    $("#timeline").innerHTML = drawTimeline(plan);
+    $("#wsrc").textContent = `Wellness: ${plan.wellness.source}. Busy hours: ${$("#persona").selectedOptions[0].text}. Models: ${plan.model.completion_model}, ${plan.model.tasktime_model}.${plan.overload_predicted ? " ⚠ Overload predicted: not everything fits before its deadline." : ""}`;
+    $("#planTable").innerHTML = `<tr><th>Task</th><th>Model: chance on time (before planning)</th><th>Best time of day</th><th>Scheduled (chance in that slot)</th><th>Main reasons</th></tr>` +
+      plan.tasks.map((t) => {
+        const p = t.p_on_time_model, l = p === null ? "neutral" : level(p);
+        const when = t.sessions.length ? t.sessions.map((s) => `${fmtD(s.start)} ${fmtT(s.start)}–${fmtT(s.end)} <span class="pill ${level(s.p)}">${pct(s.p)}</span>`).join("<br>")
+          : `<span class="pill risk">not placed: ${t.unscheduled}</span>`;
+        const parts = t.parts ? Object.entries(t.parts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `${k} ${pct(v)}`).join(", ") : "—";
+        return `<tr><td><b>${t.title}</b><div class="small muted">${t.category} · ${t.estimated_minutes} min · priority ${t.priority}</div></td>
+          <td class="num"><span class="pill ${l}">${p === null ? "—" : pct(p)}</span></td><td>${parts}</td><td>${when}</td>
+          <td class="small">${t.reasons.map((r) => `${r.label} <b style="color:var(--${r.effect > 0 ? "good" : "risk"})">${r.direction}</b>`).join("<br>")}</td></tr>`;
+      }).join("");
+    $("#planMsg").textContent = "";
+  } catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; }
+};
+
+// ---------- 3. status
+api("/v1/demo/context").then((c) => {
+  $("#status").textContent = `Service: ${c.models.name} v${c.models.version} · completion model: ${c.models.completion_model} · time-of-day model: ${c.models.tasktime_model} · PMData: ${c.pmdata_days} days from ${c.pmdata_participants} people`;
+  const p = c.personas;
+  if (p.working_adult) $("#atusres").textContent = `Working adult busy ${p.working_adult.map((b) => b.join("–")).join(", ")}; student ${p.university_student.map((b) => b.join("–")).join(", ")}`;
+}).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,64 +1,72 @@
 # M3 — AI-Based Predictive Adaptive Schedule Optimization
 
-**Owner:** G.W.D.D.N. Kumarasinghe (IT23267336) · **Port:** 8103 · **Endpoint:** `POST /v1/schedule` · `GET /health`
+**Owner:** G.W.D.D.N. Kumarasinghe (IT23267336) · **Port:** 8103 · **Endpoint:** `POST /v1/schedule` · `GET /health` ·
+**Demo:** `GET /demo`
 
-Request `ScheduleRequest` → response `ScheduleResult` — defined once in [`contracts/`](../../contracts) (JSON Schemas:
-`contracts/schemas/m3_schedule_*.schema.json`). The core API is the only caller. The service is **stateless**: no database,
-no user data stored.
+Request `ScheduleRequest` → response `ScheduleResult`, defined once in [`contracts/`](../../contracts). The core API is the
+only caller. The service is **stateless**: no database, no user data stored.
 
-## What the baseline does (v0.1.0)
+## What it does (v0.2.0)
 
-**Energy-aware greedy scheduler** (`src/m3/scheduling/heuristic.py`, pure functions, 15 unit tests):
-1. **Grid** — horizon split into 15-min cells; a cell is free if it is inside the local day window
-   (`day_start_hour`–`day_end_hour`), after `as_of`, and not overlapping a busy block or a fixed task. Each cell carries the
-   Module 2 forecast (neutral profile if missing).
-2. **Fixed tasks** (lectures, meetings) stay exactly where they are.
-3. **Order** flexible tasks by urgency `0.6/(1 + hours_to_deadline/24) + 0.4·priority/5`; tasks > 120 min are split into
-   ≤ 120-min sessions with ≥ 15 min between them.
-4. **Place** each session in the contiguous free block (ending before its deadline) with the highest **completion
-   probability** from a transparent logistic model: slack to deadline, slot energy and focus (weighted by how much the task
-   category needs them), fatigue, duration, priority, the user's on-time rate for that category, times rescheduled, late
-   evening. A soft penalty avoids more than 3 h of back-to-back work.
-5. **Flags** — `at_risk_task_ids` (probability < 0.5), `unscheduled` with a reason, and `overload_predicted` when
-   earliest-deadline-first demand exceeds the free time before some deadline or mean forecast burnout risk > 0.7.
+| Part | Data | Code | Result |
+|---|---|---|---|
+| **Completion model** — chance a task is finished on time | OULAD (663,420 cases) | `src/m3/train_oulad.py`, served by `src/m3/completion_model.py` | XGBoost: **83.4 %** accuracy, ROC-AUC **0.916** on the unseen 2014J semester; time CV 84.0 % ± 1.4 |
+| **Time-of-day model** — when people usually do a task | MS-LaTTE (10,101 titles) | `src/m3/tasktime.py` | 53.7 % (4 classes; most-common guess 41.6 %), top-2 82.8 % |
+| **Wellness stand-in** for Module 2 | PMData (1,724 days, 16 people) | `src/m3/context_datasets.py` | hourly energy / focus / fatigue / burnout in Module 2's format |
+| **Default busy hours** | ATUS 2025 weekday diaries | `src/m3/context_datasets.py` | work / class hours for a working adult and a university student |
+| **Wellness evidence** | StudentLife (44 students) | `src/m3/context_datasets.py` | +0.18 stress and −0.25 h sleep per extra deadline (within student) |
+| **Scheduler** | — | `src/m3/scheduling/heuristic.py` | places each task in the slot with the best adjusted chance |
 
-The baseline is deliberately simple and transparent so the whole app works end-to-end from day one. It is also the
-**comparison baseline** for the trained model in your evaluation chapter.
+How a schedule is made (`app/predictor.py`):
+1. The **completion model** gives each flexible task a chance of being finished on time from the user's behaviour
+   (on-time rate, recent activity, unfinished / overdue tasks; from the task-event log) and the task (time left,
+   priority).
+2. The **time-of-day model** gives each task title a preference over morning / afternoon / evening / night.
+3. The **scheduler** splits the horizon into 15-minute cells (day window, busy blocks, fixed tasks and meal breaks
+   removed), orders tasks by urgency, and puts each session where the model's chance — adjusted for that slot's
+   wellness (Module 2 forecast), length, hour, time-of-day fit and the time lost before it — is highest.
+4. Flags: `at_risk_task_ids` (chance < 0.5), `unscheduled` with a reason, `overload_predicted`.
 
-## What you replace
+If the trained files are missing (fresh clone, CI), the service falls back to the **transparent baseline** (hand-set
+logistic model, `COEF` in `heuristic.py`) and `/health` says so. The baseline is also the comparison baseline for the
+evaluation. **Next:** OR-Tools CP-SAT optimiser behind the same interface (`src/m3/scheduling/cpsat.py`), simulation on
+ATUS / PMData / StudentLife users, then pilot data.
 
-1. **Completion model**: train on the OULAD proxy task (`src/m3/train_oulad.py`, leakage-audited) and later on pilot
-   task logs (the core API's task-event log); map it onto app features and swap it in for `completion_probability()`.
-2. **OR-Tools CP-SAT optimiser** (`src/m3/scheduling/cpsat.py` has the design) behind the same `schedule()` interface;
-   keep the heuristic as the evaluation baseline.
-3. **Proactive regeneration** — the core API calls `POST /v1/schedule` with a `reason` (e.g. `task_added`,
-   `task_missed`, `overload_predicted`); add stability (minimise moves vs the current plan) in the CP-SAT objective.
+## Build the models (needs the datasets in `../../../07-datasets`)
+
+```bash
+cd services/m3-schedule-optimizer
+source .venv/bin/activate                     # python -m pip install -r requirements-train.txt
+PYTHONPATH=src python -m m3.train_oulad       # completion model (long: tuning) -> models/, reports/
+PYTHONPATH=src python -m m3.build_demo_assets # defaults + real held-out cases for the demo
+PYTHONPATH=src python -m m3.tasktime          # time-of-day model (MS-LaTTE)
+PYTHONPATH=src python -m m3.context_datasets  # PMData, ATUS, StudentLife
+# evidence in MLflow:
+PYTHONPATH=src python -m m3.log_to_mlflow && PYTHONPATH=src python -m m3.log_model_history && PYTHONPATH=src python -m m3.cross_validate
+mlflow ui --backend-store-uri sqlite:///mlflow.db      # http://127.0.0.1:5000
+```
+
+## Run, demo and test
+
+```bash
+PYTHONPATH=src:. uvicorn app.main:app --port 8103    # http://localhost:8103/demo  and  /docs
+python -m pytest                                     # model tests skip themselves if models/ is empty
+```
 
 ## Folder layout
 
 ```
 m3-schedule-optimizer/
-├── app/               serving only: main.py (FastAPI), predictor.py (Predictor.predict), settings.py
-├── src/m3/          research + training code (imported by the app — same code for training and serving)
-├── notebooks/         exploration (clear outputs before committing)
-├── models/            trained artefacts — gitignored except model_card.json
-├── tests/             pytest (contract + behaviour tests)
-├── requirements.txt   serving dependencies
-└── Dockerfile         built from the repo root (needs ../../contracts)
+├── app/          serving: main.py (FastAPI), predictor.py, demo.py (model + demo endpoints), static/demo.html
+├── src/m3/       research + training code (imported by the app — same code for training and serving)
+├── notebooks/    evidence notebook (01_completion_model_evidence.ipynb)
+├── models/       trained artefacts — gitignored except model_card.json and the small demo JSON files
+├── reports/      results JSON + figures
+├── tests/        pytest (contract, behaviour and model tests)
+└── Dockerfile    built from the repo root (needs ../../contracts)
 ```
 
 Data never goes in the repo: read it from `DATA_DIR` (the `07-datasets` folder next to the repo).
-
-## Run and test
-
-```bash
-# from the repo root, once:  make setup
-cd services/m3-schedule-optimizer
-../../.venv/bin/python -m pytest                     # tests
-../../.venv/bin/uvicorn app.main:app --reload --port 8103   # http://localhost:8103/docs
-```
-
-Or everything together: `make up` (Docker Compose) from the repo root. `make test-m3` runs only these tests.
 
 ## Rules
 
