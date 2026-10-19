@@ -150,7 +150,7 @@ td.num { font-variant-numeric: tabular-nums; }
       <div class="scroll"><table>
         <tr><th>Part</th><th>Data</th><th>Method</th><th>Result</th></tr>
         <tr><td><b>Completion model</b></td><td>OULAD, 663,420 cases from 32,593 students</td><td>XGBoost, Optuna-tuned, time-based split</td><td>83.4% accuracy, ROC-AUC 0.916 (majority guess 52.7%); time CV 84.0% ± 1.4</td></tr>
-        <tr><td><b>Time-of-day model</b></td><td>MS-LaTTE, 10,101 to-do titles, 5 annotators each</td><td>TF-IDF + logistic regression</td><td id="ttres">53.7% (4 classes; most-common guess 41.6%), top-2 82.8%</td></tr>
+        <tr><td><b>Time-of-day model</b></td><td>MS-LaTTE, 10,101 to-do titles, 5 annotators each</td><td>TF-IDF of title + category, logistic regression</td><td id="ttres">56.3% (4 classes; most-common guess 41.6%, a single person 37.1%), top-2 84.7%</td></tr>
         <tr><td><b>Wellness stand-in</b></td><td>PMData, 1,724 days from 16 people</td><td>daily level × time-of-day alertness curve</td><td>Hourly energy / focus / fatigue in Module 2's format</td></tr>
         <tr><td><b>Busy hours</b></td><td>ATUS 2025 weekday diaries</td><td>survey-weighted share at work / class / travel</td><td id="atusres">Default work and class hours per persona</td></tr>
         <tr><td><b>Wellness evidence</b></td><td>StudentLife, 44 students, 10 weeks</td><td>within-student deadline load vs. stress and sleep</td><td>+0.18 stress and −0.25 h sleep per extra deadline</td></tr>

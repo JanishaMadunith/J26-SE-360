@@ -11,7 +11,7 @@ only caller. The service is **stateless**: no database, no user data stored.
 | Part | Data | Code | Result |
 |---|---|---|---|
 | **Completion model** — chance a task is finished on time | OULAD (663,420 cases) | `src/m3/train_oulad.py`, served by `src/m3/completion_model.py` | XGBoost: **83.4 %** accuracy, ROC-AUC **0.916** on the unseen 2014J semester; time CV 84.0 % ± 1.4 |
-| **Time-of-day model** — when people usually do a task | MS-LaTTE (10,101 titles) | `src/m3/tasktime.py` | 53.7 % (4 classes; most-common guess 41.6 %), top-2 82.8 % |
+| **Time-of-day model** — when people usually do a task | MS-LaTTE (10,101 titles) | `src/m3/tasktime.py` | 56.3 % (4 classes; most-common guess 41.6 %, a single person 37.1 %), top-2 84.7 % |
 | **Wellness stand-in** for Module 2 | PMData (1,724 days, 16 people) | `src/m3/context_datasets.py` | hourly energy / focus / fatigue / burnout in Module 2's format |
 | **Default busy hours** | ATUS 2025 weekday diaries | `src/m3/context_datasets.py` | work / class hours for a working adult and a university student |
 | **Wellness evidence** | StudentLife (44 students) | `src/m3/context_datasets.py` | +0.18 stress and −0.25 h sleep per extra deadline (within student) |

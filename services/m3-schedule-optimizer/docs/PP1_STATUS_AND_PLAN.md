@@ -40,9 +40,11 @@ at 1 / 3 / 7 / 14 days before the deadline.
 * Student-grouped 5-fold (no student in both training and test): **86.1 % ± 0.1**, AUC 0.938.
 
 ### Time-of-day model — "When in the day is this task usually done?"
-TF-IDF of the title + logistic regression; settings chosen on a validation part of the training data.
-**53.7 %** on the held-out 20 % (4 classes; always guessing "evening" gives 41.6 %), **82.8 %** top-2;
-5-fold CV 53.6 % ± 0.9. Examples: "morning run" → morning, "team meeting" → afternoon, "buy groceries" → evening,
+TF-IDF of the title and its list / category + logistic regression; settings chosen on a validation part of the
+training data.
+**56.3 %** on the held-out 20 % (4 classes; always guessing "evening" gives 41.6 %), **84.7 %** top-2;
+5-fold CV 56.2 % ± 0.6. The task is ambiguous even for people: one annotator matches the majority of the other
+annotators only **37.1 %** of the time, so the model agrees with the crowd better than a single person does. Examples: "morning run" → morning, "team meeting" → afternoon, "buy groceries" → evening,
 "watch a movie" → night.
 
 ### Supporting results

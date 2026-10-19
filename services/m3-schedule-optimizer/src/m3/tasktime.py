@@ -7,9 +7,11 @@ Labels: each task was judged by 5 annotators, who could tick several of WD/WE x 
 anytime. Votes are pooled into one share per part of day ("anytime" is spread evenly). The training target is the
 part of day with most votes; the model outputs a probability for each part.
 
-Model: TF-IDF of words (1-2 grams) and characters (2-5 grams) of the title -> multinomial logistic regression.
+Model: TF-IDF of words (1-2 grams) and characters (2-5 grams) of the title + the list it is in (MS-LaTTE list name;
+in the app, the task category mapped by CATEGORY_LIST) -> multinomial logistic regression.
 Settings (C, class weighting) are chosen by log-loss on a validation part of the TRAINING data only.
-Evaluation: held-out 20% test split + 5-fold cross-validation; compared with always predicting the most common part.
+Evaluation: held-out 20% test split + 5-fold cross-validation; compared with always predicting the most common part
+and with people: how often one annotator agrees with the majority of the others (the task is ambiguous by nature).
 
 Usage (from services/m3-schedule-optimizer):
     PYTHONPATH=src python -m m3.tasktime            # train, evaluate, save models/tasktime_model.joblib, log MLflow
@@ -68,17 +70,60 @@ def votes(task: dict) -> np.ndarray:
     return v
 
 
+# App task category -> the closest MS-LaTTE list name (the list a task sits in, e.g. "work", "school").
+CATEGORY_LIST = {
+    "study": "school",
+    "work": "work",
+    "exercise": "workout",
+    "chores": "chores",
+    "personal": "family",
+    "social": "family",
+    "other": "default list",
+}
+
+
+def model_text(title: str, list_name: str | None = None) -> str:
+    """Model input: the task title plus the list / category it belongs to (context helps: 'call' in 'work' vs 'family')."""
+    return f"{title.strip().lower()} || list: {(list_name or 'default list').strip().lower()}"
+
+
+def annotator_parts(task: dict) -> list[int]:
+    """Each annotator's preferred part of day (for the human-agreement baseline)."""
+    out = []
+    for j in task.get("TimeJudgements", []):
+        if j.get("Known") != "yes":
+            continue
+        v = votes({"TimeJudgements": [j]})
+        if v.sum():
+            out.append(v)
+    return out
+
+
+def human_baseline(data_dir: Path = DATA_DIR, seed: int = SEED) -> float:
+    """How often ONE annotator's choice matches the majority of the OTHER annotators (a human 'accuracy')."""
+    rng = np.random.default_rng(seed)
+    hits = []
+    for t in load_mslatte(data_dir):
+        ann = annotator_parts(t)
+        if len(ann) < 2:
+            continue
+        k = int(rng.integers(len(ann)))
+        rest = sum(a for i, a in enumerate(ann) if i != k)
+        hits.append(int(np.argmax(ann[k])) == int(np.argmax(rest)))
+    return float(np.mean(hits))
+
+
 def dataset(data_dir: Path = DATA_DIR):
-    titles, y, shares = [], [], []
+    texts, y, shares = [], [], []
     for t in load_mslatte(data_dir):
         v = votes(t)
         title = (t.get("TaskTitle") or "").strip().lower()
         if v.sum() == 0 or not title:
             continue
-        titles.append(title)
+        texts.append(model_text(title, t.get("ListTitle")))
         y.append(int(np.argmax(v)))
         shares.append(v / v.sum())
-    return titles, np.array(y), np.array(shares)
+    return texts, np.array(y), np.array(shares)
 
 
 def make_model(C: float = 1.0, class_weight=None):  # noqa: N803
@@ -114,13 +159,16 @@ def _load(path: str):
     return joblib.load(path)
 
 
-def predict_parts(titles: list[str], models_dir: Path = MODELS_DIR) -> list[dict[str, float]] | None:
-    """Preference over PARTS for each title, or None if the model file is missing."""
+def predict_parts(
+    titles: list[str], models_dir: Path = MODELS_DIR, categories: list[str] | None = None
+) -> list[dict[str, float]] | None:
+    """Preference over PARTS for each title (and optional app category), or None if the model file is missing."""
     path = Path(models_dir) / MODEL_FILE
     if not path.exists():
         return None
     model = _load(str(path))
-    proba = model.predict_proba([t.strip().lower() for t in titles])
+    cats = categories or [None] * len(titles)
+    proba = model.predict_proba([model_text(t, CATEGORY_LIST.get(c, c)) for t, c in zip(titles, cats, strict=True)])
     return [{p: round(float(x), 4) for p, x in zip(PARTS, row, strict=True)} for row in proba]
 
 
@@ -182,7 +230,11 @@ def main():
         "morning run",
         "clean the kitchen",
     ]
-    ex = dict(zip(examples, final.predict_proba(examples).round(3).tolist(), strict=True))
+    ex_cats = ["exercise", "study", "chores", "work", "personal", "study", "chores", "social", "exercise", "chores"]
+    ex_in = [model_text(t, CATEGORY_LIST[c]) for t, c in zip(examples, ex_cats, strict=True)]
+    ex = dict(zip(examples, final.predict_proba(ex_in).round(3).tolist(), strict=True))
+    human = human_baseline()
+    print(f"people: one annotator matches the majority of the others {human:.3f} of the time")
     summary = {
         "dataset": "MS-LaTTE (Jauhar et al., LREC 2022)",
         "n_tasks": len(titles),
@@ -191,6 +243,7 @@ def main():
         "class_counts": {PARTS[k]: v for k, v in sorted(counts.items())},
         "test": res,
         "baseline_most_common": {"part": PARTS[major], **res_base},
+        "human_agreement_with_majority": human,
         "cv5_accuracy_mean": float(np.mean(cv_acc)),
         "cv5_accuracy_std": float(np.std(cv_acc, ddof=1)),
         "cv5": cv,
@@ -211,8 +264,10 @@ def main():
             {
                 "mlflow.note.content": (
                     "Second Module 3 model: suggests the part of the day (morning / afternoon / evening / night) when "
-                    "people usually do a task, from its title. Trained on 10,101 real to-do titles from MS-LaTTE, each "
-                    "judged by 5 annotators. Used by the scheduler as a soft time-slot preference."
+                    "people usually do a task, from its title and list/category. Trained on 10,101 real to-do titles "
+                    "from MS-LaTTE, each judged by 5 annotators. People themselves disagree a lot: one annotator matches "
+                    "the others' majority only ~37% of the time, so the model (~56%) is better than a single person. "
+                    "Used by the scheduler as a soft time-slot preference."
                 )
             }
         )
@@ -220,7 +275,7 @@ def main():
             {
                 "dataset": "MS-LaTTE",
                 "n_tasks": len(titles),
-                "features": "tf-idf words 1-2 + chars 2-5",
+                "features": "tf-idf words 1-2 + chars 2-5 of title + list/category",
                 "model": "LogisticRegression",
                 "C": best_c,
                 "class_weight": str(best_cw),
@@ -229,6 +284,7 @@ def main():
         )
         mlflow.log_metrics({f"test_{k}": v for k, v in res.items()})
         mlflow.log_metrics({f"baseline_{k}": v for k, v in res_base.items()})
+        mlflow.log_metric("human_agreement_with_majority", human)
         mlflow.log_metrics(
             {"cv5_accuracy_mean": float(np.mean(cv_acc)), "cv5_accuracy_std": float(np.std(cv_acc, ddof=1))}
         )

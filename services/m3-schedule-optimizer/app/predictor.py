@@ -62,7 +62,11 @@ class Predictor:
         flexible = [t for t in req.tasks if not (t.fixed_start and t.fixed_end)]
         if not flexible:
             return {}
-        parts = predict_parts([t.title for t in flexible], self.models_dir) if self.has_tasktime else None
+        parts = (
+            predict_parts([t.title for t in flexible], self.models_dir, [t.category.value for t in flexible])
+            if self.has_tasktime
+            else None
+        )
         probs = [None] * len(flexible)
         if self.has_completion:
             rows = []
