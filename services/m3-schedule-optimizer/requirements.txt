@@ -4,3 +4,9 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 pydantic-settings>=2.4
 tzdata
+# Trained models (completion: XGBoost; time-of-day: scikit-learn)
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.5
+xgboost>=2.1
+joblib>=1.4

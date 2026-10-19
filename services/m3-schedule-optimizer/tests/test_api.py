@@ -9,7 +9,7 @@ client = TestClient(create_app())
 def test_health():
     r = client.get("/health").json()
     assert r["status"] == "ok" and r["service"] == "m3-schedule-optimizer"
-    assert r["model"]["name"] == "m3-greedy-energy-aware"
+    assert r["model"]["name"] in ("m3-ml-energy-aware", "m3-greedy-energy-aware")
 
 
 def test_schedule_endpoint_returns_contract(helpers):

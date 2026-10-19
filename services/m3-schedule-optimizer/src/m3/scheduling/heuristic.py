@@ -15,8 +15,10 @@ Algorithm
   5. FLAGS     at-risk = scheduled with probability < 0.5; overload = earliest-deadline-first demand exceeds the
                free minutes before some deadline, or the mean forecast burnout risk > 0.7.
 
-The completion model is a hand-set logistic function — a stand-in until the completion model trained on
-OULAD / pilot data (src/m3/train_oulad.py) is mapped onto app features. Coefficients are in COEF.
+Completion chance per slot: when the service passes a TaskPrior (trained completion model on OULAD + task
+time-of-day model on MS-LaTTE), the task-level probability from the trained model is adjusted for the slot's
+wellness, length, hour and time-of-day fit. Without priors, a transparent hand-set logistic baseline is used
+(COEF) — kept as the comparison baseline.
 """
 
 from __future__ import annotations
@@ -76,6 +78,7 @@ COEF = {
     "category_rate": 1.5,  # user's on-time rate for this category, centred at 0.7
     "rescheduled": -0.3,  # each previous reschedule
     "late_evening": -0.3,  # sessions starting at or after 21:00 local
+    "time_fit": 0.8,  # preference for this part of the day (task time-of-day model), centred at 0.25
 }
 
 
@@ -102,10 +105,49 @@ class CompletionFeatures:
     category_rate: float
     times_rescheduled: int
     local_start_hour: int
+    base_logit: float | None = None  # task-level logit from the trained completion model (if available)
+    slack_now_hours: float | None = None  # slack if the task were done right now (reference for base_logit)
+    time_pref: float | None = None  # task time-of-day model: share for this slot's part of the day
+
+
+@dataclass(frozen=True)
+class TaskPrior:
+    """What the trained models say about a task before it is placed."""
+
+    p_on_time: float | None = None  # completion model (XGBoost, OULAD)
+    parts: dict[str, float] | None = None  # time-of-day preference (MS-LaTTE model)
+
+
+def _slot_terms(f: CompletionFeatures) -> float:
+    """How a particular time slot changes the chance: wellness, length, hour and time-of-day fit."""
+    z = (
+        COEF["energy"] * ENERGY_DEMAND.get(f.category, 1.0) * (f.energy - 0.5)
+        + COEF["focus"] * FOCUS_DEMAND.get(f.category, 0.5) * (f.focus - 0.5)
+        + COEF["fatigue"] * (f.fatigue - 0.5)
+        + COEF["duration_h"] * (f.duration_min / 60 - 1)
+        + COEF["late_evening"] * (1 if f.local_start_hour >= 21 else 0)
+    )
+    if f.time_pref is not None:
+        z += COEF["time_fit"] * (f.time_pref - 0.25)
+    return z
 
 
 def completion_probability(f: CompletionFeatures) -> float:
-    """Transparent logistic completion model (see COEF)."""
+    """Chance the session is completed on time.
+
+    With a trained-model prior (base_logit): the model's task-level logit, adjusted for this slot (wellness, length,
+    hour, time-of-day fit) and for the time lost before the slot. Without it: the transparent logistic baseline
+    (COEF)."""
+    if f.base_logit is not None:
+        ref = f.slack_now_hours if f.slack_now_hours is not None else f.slack_hours
+        z = (
+            f.base_logit
+            + COEF["log_slack_h"] * (math.log1p(max(f.slack_hours, 0.0)) - math.log1p(max(ref, 0.0)))
+            + _slot_terms(f)
+        )
+        if f.slack_hours < 0:
+            z -= 4.0
+        return 1 / (1 + math.exp(-z))
     z = (
         COEF["intercept"]
         + COEF["log_slack_h"] * math.log1p(max(f.slack_hours, 0.0))
@@ -118,6 +160,8 @@ def completion_probability(f: CompletionFeatures) -> float:
         + COEF["rescheduled"] * f.times_rescheduled
         + COEF["late_evening"] * (1 if f.local_start_hour >= 21 else 0)
     )
+    if f.time_pref is not None:
+        z += COEF["time_fit"] * (f.time_pref - 0.25)
     if f.slack_hours < 0:
         z -= 4.0
     return 1 / (1 + math.exp(-z))
@@ -220,10 +264,29 @@ def order_tasks(tasks: list[SchedulableTask], as_of: datetime, horizon_end: date
     return sorted(tasks, key=lambda t: (-urgency(t, as_of, horizon_end), -t.estimated_minutes, str(t.task_id)))
 
 
-def features_for(task: SchedulableTask, g: Grid, i: int, k: int, history: UserHistory) -> CompletionFeatures:
+def _part_of_hour(hour: int) -> str:
+    if 5 <= hour < 12:
+        return "morning"
+    if 12 <= hour < 17:
+        return "afternoon"
+    if 17 <= hour < 21:
+        return "evening"
+    return "night"
+
+
+def features_for(
+    task: SchedulableTask, g: Grid, i: int, k: int, history: UserHistory, prior: TaskPrior | None = None
+) -> CompletionFeatures:
     ws = g.wellness[i : i + k] or [NEUTRAL]
     start, end = g.block(i, k)
     slack = NO_DEADLINE_SLACK_H if task.deadline is None else (task.deadline - end).total_seconds() / 3600
+    base_logit = slack_now = time_pref = None
+    if prior is not None and prior.p_on_time is not None:
+        p = min(max(prior.p_on_time, 1e-4), 1 - 1e-4)
+        base_logit = math.log(p / (1 - p))
+        slack_now = NO_DEADLINE_SLACK_H if task.deadline is None else (task.deadline - g.start).total_seconds() / 3600
+    if prior is not None and prior.parts:
+        time_pref = prior.parts.get(_part_of_hour(start.astimezone(g.tz).hour))
     return CompletionFeatures(
         slack_hours=slack,
         energy=sum(w.energy for w in ws) / len(ws),
@@ -235,6 +298,9 @@ def features_for(task: SchedulableTask, g: Grid, i: int, k: int, history: UserHi
         category_rate=category_rate(history, task.category),
         times_rescheduled=task.times_rescheduled,
         local_start_hour=start.astimezone(g.tz).hour,
+        base_logit=base_logit,
+        slack_now_hours=slack_now,
+        time_pref=time_pref,
     )
 
 
@@ -249,7 +315,9 @@ def continuous_run_min(g: Grid, i: int, k: int) -> int:
     return (right - left) * CELL_MIN
 
 
-def best_block(task: SchedulableTask, g: Grid, k: int, first: int, history: UserHistory) -> tuple[int, float] | None:
+def best_block(
+    task: SchedulableTask, g: Grid, k: int, first: int, history: UserHistory, prior: TaskPrior | None = None
+) -> tuple[int, float] | None:
     last_end = g.n if task.deadline is None else min(g.n, g.index_floor(task.deadline))
     best: tuple[float, int, float] | None = None
     run_free = 0
@@ -260,7 +328,7 @@ def best_block(task: SchedulableTask, g: Grid, k: int, first: int, history: User
         s = i - k + 1
         if s < first:
             continue
-        p = completion_probability(features_for(task, g, s, k, history))
+        p = completion_probability(features_for(task, g, s, k, history, prior))
         score = p - (0.1 if continuous_run_min(g, s, k) > MAX_CONTINUOUS_MIN else 0.0)
         if best is None or score > best[0] + 1e-9:  # strict: ties keep the earliest start
             best = (score, s, p)
@@ -287,7 +355,11 @@ def overload_check(req: ScheduleRequest, g: Grid, flexible: list[SchedulableTask
 
 
 # ------------------------------------------------------------------------------------------------ main
-def schedule(req: ScheduleRequest) -> ScheduleResult:
+def schedule(
+    req: ScheduleRequest, priors: dict[UUID, TaskPrior] | None = None, model: ModelInfo = MODEL
+) -> ScheduleResult:
+    """Place the tasks. `priors` (optional) carries the trained models' view of each task."""
+    priors = priors or {}
     g = build_grid(req)
     items: list[ScheduledItem] = []
     unscheduled: list[UnscheduledTask] = []
@@ -334,7 +406,7 @@ def schedule(req: ScheduleRequest) -> ScheduleResult:
         first = 0
         for minutes in split_sessions(t.estimated_minutes):
             k = minutes // CELL_MIN
-            found = best_block(t, g, k, first, req.history)
+            found = best_block(t, g, k, first, req.history, priors.get(t.task_id))
             if found is None:
                 break
             s, p = found
@@ -374,5 +446,5 @@ def schedule(req: ScheduleRequest) -> ScheduleResult:
         at_risk_task_ids=at_risk,
         overload_predicted=overload or any(u.reason == "no_free_slot_before_deadline" for u in unscheduled),
         reason=req.reason,
-        model=MODEL,
+        model=model,
     )
