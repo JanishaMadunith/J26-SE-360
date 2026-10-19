@@ -30,6 +30,11 @@ backend/*/data/
 services/*/models/*
 !services/*/models/model_card.json
 !services/*/models/.gitkeep
+# small Module 3 demo files (derived, a few hundred KB) so the demo works from a clone
+!services/m3-schedule-optimizer/models/completion_defaults.json
+!services/m3-schedule-optimizer/models/demo_examples.json
+!services/m3-schedule-optimizer/models/atus_day_profiles.json
+!services/m3-schedule-optimizer/models/pmdata_wellness_days.json
 # training reports can be large; keep markdown + figures, drop raw prediction dumps
 services/*/reports/*.csv.gz
 
@@ -97,3 +102,8 @@ desktop.ini
 # ---------- logs
 *.log
 logs/
+
+# MLflow local tracking data (regenerate with: python -m m3.log_to_mlflow)
+mlruns/
+mlflow.db
+mlartifacts/

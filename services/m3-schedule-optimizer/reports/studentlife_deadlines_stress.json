@@ -1,0 +1,51 @@
+{
+  "n_students": 44,
+  "n_student_days": 1449,
+  "source": "StudentLife 2013 (Wang et al., UbiComp 2014)",
+  "stress": {
+    "by_deadline_load": {
+      "0": {
+        "mean": 3.049,
+        "n": 514
+      },
+      "1": {
+        "mean": 3.146,
+        "n": 326
+      },
+      "2": {
+        "mean": 3.433,
+        "n": 187
+      },
+      "3+": {
+        "mean": 3.023,
+        "n": 101
+      }
+    },
+    "within_student_slope_per_deadline": 0.1792,
+    "within_student_r": 0.1912,
+    "n": 1128
+  },
+  "sleep": {
+    "by_deadline_load": {
+      "0": {
+        "mean": 6.276,
+        "n": 509
+      },
+      "1": {
+        "mean": 6.142,
+        "n": 327
+      },
+      "2": {
+        "mean": 5.865,
+        "n": 181
+      },
+      "3+": {
+        "mean": 5.538,
+        "n": 82
+      }
+    },
+    "within_student_slope_per_deadline": -0.2513,
+    "within_student_r": -0.1946,
+    "n": 1099
+  }
+}

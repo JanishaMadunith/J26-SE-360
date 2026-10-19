@@ -1,0 +1,129 @@
+{
+  "dataset": "MS-LaTTE (Jauhar et al., LREC 2022)",
+  "n_tasks": 10101,
+  "chosen": {
+    "C": 0.5,
+    "class_weight": "None"
+  },
+  "classes": [
+    "morning",
+    "afternoon",
+    "evening",
+    "night"
+  ],
+  "class_counts": {
+    "morning": 1851,
+    "afternoon": 3830,
+    "evening": 4204,
+    "night": 216
+  },
+  "test": {
+    "accuracy": 0.537357743691242,
+    "top2_accuracy": 0.8283028203859476,
+    "macro_f1": 0.3728277032490769,
+    "annotator_agreement": 0.4158080998945954
+  },
+  "baseline_most_common": {
+    "part": "evening",
+    "accuracy": 0.4161306284017813,
+    "top2_accuracy": 0.5997031172686789,
+    "macro_f1": 0.14692522711390635,
+    "annotator_agreement": 0.3857574986835741
+  },
+  "cv5_accuracy_mean": 0.5361839301198799,
+  "cv5_accuracy_std": 0.009232216192105359,
+  "cv5": [
+    {
+      "accuracy": 0.5423057892132608,
+      "top2_accuracy": 0.8431469569520039,
+      "macro_f1": 0.38449085336874067,
+      "annotator_agreement": 0.4119559707566066
+    },
+    {
+      "accuracy": 0.5356435643564357,
+      "top2_accuracy": 0.8227722772277227,
+      "macro_f1": 0.39520954377353845,
+      "annotator_agreement": 0.4150136322676568
+    },
+    {
+      "accuracy": 0.5237623762376238,
+      "top2_accuracy": 0.8163366336633663,
+      "macro_f1": 0.36906099611587895,
+      "annotator_agreement": 0.41303031301644116
+    },
+    {
+      "accuracy": 0.5475247524752476,
+      "top2_accuracy": 0.8267326732673267,
+      "macro_f1": 0.3856631668076716,
+      "annotator_agreement": 0.41655529776153455
+    },
+    {
+      "accuracy": 0.5316831683168317,
+      "top2_accuracy": 0.8202970297029702,
+      "macro_f1": 0.3642973321999015,
+      "annotator_agreement": 0.4106766074429489
+    }
+  ],
+  "examples": {
+    "go to the gym": [
+      0.449,
+      0.119,
+      0.383,
+      0.049
+    ],
+    "read research papers": [
+      0.07,
+      0.391,
+      0.478,
+      0.061
+    ],
+    "buy groceries": [
+      0.01,
+      0.03,
+      0.956,
+      0.004
+    ],
+    "team meeting": [
+      0.253,
+      0.669,
+      0.063,
+      0.015
+    ],
+    "call mom": [
+      0.108,
+      0.158,
+      0.725,
+      0.009
+    ],
+    "finish assignment": [
+      0.102,
+      0.501,
+      0.384,
+      0.013
+    ],
+    "pay electricity bill": [
+      0.046,
+      0.632,
+      0.314,
+      0.009
+    ],
+    "watch a movie": [
+      0.065,
+      0.246,
+      0.185,
+      0.504
+    ],
+    "morning run": [
+      0.712,
+      0.134,
+      0.139,
+      0.015
+    ],
+    "clean the kitchen": [
+      0.46,
+      0.124,
+      0.367,
+      0.049
+    ]
+  }
+}
