@@ -10,9 +10,15 @@ REPLACE with the trained time-series model: keep the class name, `info` and `pre
 from __future__ import annotations
 
 import math
+import pathlib
 from datetime import timedelta
 from zoneinfo import ZoneInfo
 
+import joblib
+import numpy as np
+import pandas as pd
+
+from m2_wellness.features import FEATURES, TARGETS, request_features, slot_features
 from m2_wellness.heuristics import (
     DEFAULT_WAKE_H,
     SLEEP_NEED_H,
@@ -26,14 +32,70 @@ from m2_wellness.heuristics import (
 )
 from wellness_contracts import ModelInfo, WellnessForecast, WellnessForecastRequest, WellnessSlot, utc_now
 
+MODELS = pathlib.Path(__file__).resolve().parents[1] / "models"
+
 
 class Predictor:
-    info = ModelInfo(name="m2-two-process-baseline", version="0.1.0")
+    info = ModelInfo(name="m2-hgb-slot-forecaster", version="0.2.0")
+    baseline_info = ModelInfo(name="m2-two-process-baseline", version="0.1.0")
+
+    def __init__(self):
+        files = [MODELS / f"{t}.joblib" for t in TARGETS]
+        self.models = (
+            {t: joblib.load(f) for t, f in zip(TARGETS, files, strict=False)}
+            if all(f.exists() for f in files)
+            else None
+        )
 
     def predict(self, req: WellnessForecastRequest) -> WellnessForecast:
+        if self.models is None:
+            return self._baseline(req)
+
+        tz = ZoneInfo(req.timezone)
+        now = req.as_of.astimezone(tz)
+        rf = request_features(req)
+        if np.isnan(rf["wake_hour"]):
+            rf["wake_hour"] = DEFAULT_WAKE_H
+        sleep_h = None if np.isnan(rf["sleep_h"]) else float(rf["sleep_h"])
+
+        step = timedelta(minutes=req.slot_minutes)
+        local = now.replace(second=0, microsecond=0)
+        start = local - timedelta(minutes=(local.hour * 60 + local.minute) % req.slot_minutes)
+        n = req.horizon_hours * 60 // req.slot_minutes
+        times = [start + i * step for i in range(n)]
+
+        rows = []
+        for t in times:
+            sf = slot_features(t.hour + t.minute / 60, rf["wake_hour"], 0.0)
+            sf["offset_h"] = max(0.0, (t - now).total_seconds() / 3600)
+            rows.append({**rf, **sf})
+        x = pd.DataFrame(rows)[FEATURES].astype(float)
+        sc = {t: np.clip(self.models[t].predict(x), 0, 1) for t in TARGETS}
+
+        slots = [
+            WellnessSlot(
+                start=t,
+                end=t + step,
+                mental_fatigue=round(float(sc["mental_fatigue"][i]), 4),
+                focus=round(float(sc["focus"][i]), 4),
+                energy=round(float(sc["energy"][i]), 4),
+                burnout_risk=round(float(sc["burnout_risk"][i]), 4),
+            )
+            for i, t in enumerate(times)
+        ]
+        return WellnessForecast(
+            user_id=req.user_id,
+            generated_at=utc_now(),
+            slot_minutes=req.slot_minutes,
+            slots=slots,
+            sleep_hours_last_night=sleep_h,
+            model=self.info,
+        )
+
+    def _baseline(self, req: WellnessForecastRequest) -> WellnessForecast:
         tz = ZoneInfo(req.timezone)
         sleep_h, wake = estimate_sleep(req.screen_events, req.steps, req.light, req.as_of, tz)
-        if wake is None:  # unknown: assume a 07:00 wake-up on the as_of day (or the previous day)
+        if wake is None:
             local = req.as_of.astimezone(tz)
             wake = local.replace(hour=int(DEFAULT_WAKE_H), minute=0, second=0, microsecond=0)
             if wake > local:
@@ -45,7 +107,6 @@ class Predictor:
         report = latest_energy_report(req.self_reports, req.as_of)
 
         step = timedelta(minutes=req.slot_minutes)
-        # slots are aligned to the user's LOCAL clock (e.g. 09:00–10:00 Colombo), starting at the current slot
         local = req.as_of.astimezone(tz).replace(second=0, microsecond=0)
         start = local - timedelta(minutes=(local.hour * 60 + local.minute) % req.slot_minutes)
         slots = []
@@ -58,7 +119,7 @@ class Predictor:
             c = circadian(clock)
             s = homeostatic_fatigue(awake_h)
             energy = clip01(0.2 + 0.8 * c - 0.35 * s - 0.25 * debt - 0.1 * stress_24h)
-            if report is not None:  # blend toward the user's own rating, decaying over ~6 h
+            if report is not None:
                 val, at = report
                 w = math.exp(-max(0.0, (mid - at).total_seconds() / 3600) / 6) * 0.6
                 energy = clip01((1 - w) * energy + w * val)
@@ -82,5 +143,5 @@ class Predictor:
             slot_minutes=req.slot_minutes,
             slots=slots,
             sleep_hours_last_night=sleep_h,
-            model=self.info,
+            model=self.baseline_info,
         )

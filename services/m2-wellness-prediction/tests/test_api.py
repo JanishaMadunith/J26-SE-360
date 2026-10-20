@@ -1,15 +1,19 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
-from wellness_contracts import WellnessForecast
+from app.predictor import Predictor
+from wellness_contracts import WellnessForecast, WellnessForecastRequest
 
 UTC = UTC
 # 08:00 Colombo = 02:30 UTC
 AS_OF = datetime(2026, 10, 17, 2, 30, tzinfo=UTC)
-client = TestClient(create_app())
+fallback_predictor = Predictor()
+fallback_predictor.models = None
+client = TestClient(create_app(predictor=fallback_predictor))
 
 
 def body(**kw):
@@ -46,6 +50,28 @@ def test_minimal_request_gives_24_hourly_slots():
 def test_slot_granularity_and_horizon():
     fc = client.post("/v1/wellness-forecast", json=body(horizon_hours=12, slot_minutes=30)).json()
     assert len(fc["slots"]) == 24 and fc["slot_minutes"] == 30
+
+
+def test_forecast_has_wellness_output_shape():
+    forecast = client.post("/v1/wellness-forecast", json=body()).json()
+
+    assert set(forecast) == {
+        "user_id",
+        "generated_at",
+        "slot_minutes",
+        "sleep_hours_last_night",
+        "slots",
+        "model",
+    }
+    assert set(forecast["model"]) == {"name", "version"}
+    assert set(forecast["slots"][0]) == {
+        "start",
+        "end",
+        "energy",
+        "focus",
+        "mental_fatigue",
+        "burnout_risk",
+    }
 
 
 def test_sleep_estimate_and_sleep_debt_effect():
@@ -94,3 +120,24 @@ def test_self_report_pulls_energy():
     low = client.post("/v1/wellness-forecast", json=body(self_reports=rep)).json()
     base = client.post("/v1/wellness-forecast", json=body()).json()
     assert low["slots"][0]["energy"] < base["slots"][0]["energy"]
+
+
+def test_trained_predictor_handles_empty_request():
+    predictor = Predictor()
+    if predictor.models is None:
+        pytest.skip("trained model files are not available")
+
+    request = WellnessForecastRequest.model_validate(body())
+    forecast = predictor.predict(request)
+
+    assert len(forecast.slots) == 24
+    for slot in forecast.slots:
+        assert all(
+            0 <= value <= 1
+            for value in (
+                slot.mental_fatigue,
+                slot.focus,
+                slot.energy,
+                slot.burnout_risk,
+            )
+        )
