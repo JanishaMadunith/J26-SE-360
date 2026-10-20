@@ -63,6 +63,27 @@ def build_pmdata(data_dir: Path = DATA_DIR) -> pd.DataFrame:
               "energy", "focus", "calm"]].round(3)  # fmt: skip
 
 
+# StudentLife effect sizes (within student, per extra deadline in the next 3 days; reports/studentlife_*.json)
+STRESS_PER_DEADLINE = 0.18  # on the 1-5 stress scale
+SLEEP_H_PER_DEADLINE = -0.25  # hours of sleep
+
+
+def apply_deadline_load(day: dict, load: int) -> dict:
+    """Lower a day's wellness for its deadline load, using the StudentLife effects: more stress -> less calm and
+    focus; less sleep (out of ~7 h) -> less energy."""
+    if load <= 0:
+        return day
+    d = dict(day)
+    stress = STRESS_PER_DEADLINE * load / 4  # 1-5 scale -> 0-1
+    sleep = -SLEEP_H_PER_DEADLINE * load / 7  # share of a 7-hour night lost
+    d["energy"] = float(np.clip(d["energy"] - sleep, 0.05, 1))
+    d["focus"] = float(np.clip(d["focus"] - stress, 0.05, 1))
+    calm = d.get("calm")
+    d["calm"] = float(np.clip((0.5 if calm is None or calm != calm else calm) - stress, 0, 1))
+    d["deadline_load"] = load
+    return d
+
+
 def hourly_wellness(day: dict, hour: int) -> dict:
     """Spread one day's level over its hours -> the four Module 2 wellness scores (0-1)."""
     c = CIRCADIAN[hour % 24]

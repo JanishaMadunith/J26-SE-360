@@ -3,7 +3,7 @@
 Algorithm
   1. GRID      Split the horizon into 15-minute cells. A cell is available if it lies inside the user's local
                day window [day_start_hour, day_end_hour), after `as_of`, does not overlap a busy block
-               or a fixed task, and is not a protected meal break (MEAL_BREAKS — so Module 4 always finds a
+               or a fixed task, and is not a protected meal break (MEAL_BREAKS, moved later if a lecture covers it — so Module 4 always finds a
                free gap to place meals). Every cell carries the Module 2 wellness values for its time
                (neutral if absent).
   2. FIXED     Fixed tasks (lectures, meetings) are kept exactly where they are.
@@ -12,7 +12,7 @@ Algorithm
   4. PLACE     Each session goes to the contiguous free block (ending before the deadline) with the highest
                expected completion probability (transparent logistic model below). A soft penalty avoids
                building more than 3 hours of back-to-back flexible work.
-  5. FLAGS     at-risk = scheduled with probability < 0.5; overload = earliest-deadline-first demand exceeds the
+  5. FLAGS     at-risk = a flexible session scheduled with probability < 0.5 (fixed events are attended, not rated); overload = earliest-deadline-first demand exceeds the
                free minutes before some deadline, or the mean forecast burnout risk > 0.7.
 
 Completion chance per slot: when the service passes a TaskPrior (trained completion model on OULAD + task
@@ -54,6 +54,7 @@ NO_DEADLINE_SLACK_H = 72.0
 # Local-time meal breaks kept free of flexible tasks: (hour, minute, length_min). They match Module 4's usual
 # meal times, so meals always have a free slot. Fixed tasks may still overlap them (the user chose that time).
 MEAL_BREAKS = ((7, 0, 30), (12, 30, 30), (19, 30, 30))
+MEAL_SHIFT_MAX_MIN = 120  # a meal break covered by a lecture/meeting moves up to 2 h later
 
 # How much a category depends on focus (cognitive demand) and on physical energy.
 FOCUS_DEMAND = {
@@ -65,7 +66,7 @@ FOCUS_DEMAND = {
     TaskCategory.social: 0.2,
     TaskCategory.other: 0.5,
 }
-ENERGY_DEMAND = {TaskCategory.exercise: 1.6}  # default 1.0
+ENERGY_DEMAND = {TaskCategory.exercise: 1.6, TaskCategory.personal: 0.4, TaskCategory.social: 0.5}  # default 1.0
 
 COEF = {
     "intercept": 0.6,
@@ -125,7 +126,7 @@ def _slot_terms(f: CompletionFeatures) -> float:
         + COEF["focus"] * FOCUS_DEMAND.get(f.category, 0.5) * (f.focus - 0.5)
         + COEF["fatigue"] * (f.fatigue - 0.5)
         + COEF["duration_h"] * (f.duration_min / 60 - 1)
-        + COEF["late_evening"] * (1 if f.local_start_hour >= 21 else 0)
+        + COEF["late_evening"] * (1 if f.local_start_hour >= 21 and FOCUS_DEMAND.get(f.category, 0.5) >= 0.5 else 0)
     )
     if f.time_pref is not None:
         z += COEF["time_fit"] * (f.time_pref - 0.25)
@@ -158,7 +159,7 @@ def completion_probability(f: CompletionFeatures) -> float:
         + COEF["priority"] * (f.priority - 3) / 2
         + COEF["category_rate"] * (f.category_rate - 0.7)
         + COEF["rescheduled"] * f.times_rescheduled
-        + COEF["late_evening"] * (1 if f.local_start_hour >= 21 else 0)
+        + COEF["late_evening"] * (1 if f.local_start_hour >= 21 and FOCUS_DEMAND.get(f.category, 0.5) >= 0.5 else 0)
     )
     if f.time_pref is not None:
         z += COEF["time_fit"] * (f.time_pref - 0.25)
@@ -188,6 +189,7 @@ class Grid:
     available: list[bool]
     wellness: list[Wellness]
     scheduled: list[bool] = field(default_factory=list)
+    meals: list[tuple[datetime, datetime]] = field(default_factory=list)
 
     def time(self, i: int) -> datetime:
         return self.start + i * CELL
@@ -226,10 +228,8 @@ def build_grid(req: ScheduleRequest) -> Grid:
     available, wellness = [], []
     for i in range(n):
         t = start + i * CELL
-        loc = t.astimezone(tz)
-        m = loc.hour * 60 + loc.minute
-        in_meal_break = any(h * 60 + mm <= m < h * 60 + mm + length for h, mm, length in MEAL_BREAKS)
-        available.append(req.day_start_hour * 60 <= m and m + CELL_MIN <= req.day_end_hour * 60 and not in_meal_break)
+        m = t.astimezone(tz).hour * 60 + t.astimezone(tz).minute
+        available.append(req.day_start_hour * 60 <= m and m + CELL_MIN <= req.day_end_hour * 60)
         wellness.append(look(t + CELL / 2))
     g = Grid(start=start, n=n, tz=tz, available=available, wellness=wellness, scheduled=[False] * n)
     blocks = [(b.start, b.end) for b in req.busy]
@@ -237,7 +237,40 @@ def build_grid(req: ScheduleRequest) -> Grid:
     for bs, be in blocks:
         for i in range(max(0, g.index_floor(bs)), min(n, g.index_ceil(be))):
             available[i] = False
+    # Fixed study/work (a lecture, a meeting) counts as focused work, so the scheduler avoids piling more
+    # focused work straight after a long one (the MAX_CONTINUOUS_MIN penalty in best_block).
+    for t in req.tasks:
+        if t.fixed_start and t.fixed_end and FOCUS_DEMAND.get(t.category, 0.5) >= 0.5:
+            for i in range(max(0, g.index_floor(t.fixed_start)), min(n, g.index_ceil(t.fixed_end))):
+                g.scheduled[i] = True
+    reserve_meals(g)
     return g
+
+
+def reserve_meals(g: Grid) -> None:
+    """Keep a free meal break each day (Module 4 places meals there). If a lecture or meeting covers the usual
+    time, the break moves to the first free 30 minutes within the next 2 hours (e.g. lunch 12:30 -> 13:00)."""
+    if g.n == 0:
+        return
+    first = g.time(0).astimezone(g.tz).date()
+    last = g.time(g.n - 1).astimezone(g.tz).date()
+    day = first
+    while day <= last:
+        for h, mm, length in MEAL_BREAKS:
+            usual = datetime(day.year, day.month, day.day, h, mm, tzinfo=g.tz)
+            k = length // CELL_MIN
+            for shift in range(0, MEAL_SHIFT_MAX_MIN + 1, CELL_MIN):
+                i = g.index_floor(usual + timedelta(minutes=shift))
+                if i + k <= 0 or i >= g.n:
+                    break  # this meal time is outside the planning window
+                cells = range(max(0, i), min(g.n, i + k))
+                if i >= 0 and i + k <= g.n and all(g.available[c] for c in cells):
+                    for c in cells:
+                        g.available[c] = False
+                        g.scheduled[c] = False  # a break resets back-to-back work
+                    g.meals.append(g.block(i, k))
+                    break
+        day += timedelta(days=1)
 
 
 # ------------------------------------------------------------------------------------------------ helpers
@@ -316,7 +349,13 @@ def continuous_run_min(g: Grid, i: int, k: int) -> int:
 
 
 def best_block(
-    task: SchedulableTask, g: Grid, k: int, first: int, history: UserHistory, prior: TaskPrior | None = None
+    task: SchedulableTask,
+    g: Grid,
+    k: int,
+    first: int,
+    history: UserHistory,
+    prior: TaskPrior | None = None,
+    earliest: bool = False,
 ) -> tuple[int, float] | None:
     last_end = g.n if task.deadline is None else min(g.n, g.index_floor(task.deadline))
     best: tuple[float, int, float] | None = None
@@ -329,6 +368,8 @@ def best_block(
         if s < first:
             continue
         p = completion_probability(features_for(task, g, s, k, history, prior))
+        if earliest:  # fallback mode: the first block that fits
+            return s, p
         score = p - (0.1 if continuous_run_min(g, s, k) > MAX_CONTINUOUS_MIN else 0.0)
         if best is None or score > best[0] + 1e-9:  # strict: ties keep the earliest start
             best = (score, s, p)
@@ -403,23 +444,29 @@ def schedule(
             unscheduled.append(UnscheduledTask(task_id=t.task_id, reason="deadline_passed"))
             continue
         placed: list[tuple[int, int, float]] = []
-        first = 0
-        for minutes in split_sessions(t.estimated_minutes):
-            k = minutes // CELL_MIN
-            found = best_block(t, g, k, first, req.history, priors.get(t.task_id))
-            if found is None:
+        # 1st try: each session in its best slot. If a later session no longer fits (an early session took a late
+        # slot), roll back and retry with every session in the earliest slot that fits.
+        for earliest in (False, True):
+            placed = []
+            first = 0
+            for minutes in split_sessions(t.estimated_minutes):
+                k = minutes // CELL_MIN
+                found = best_block(t, g, k, first, req.history, priors.get(t.task_id), earliest=earliest)
+                if found is None:
+                    break
+                s, p = found
+                placed.append((s, k, p))
+                for c in range(s, s + k):
+                    g.available[c] = False
+                    g.scheduled[c] = True
+                first = s + k + 1  # at least a 15-min break between sessions
+            if len(placed) == len(split_sessions(t.estimated_minutes)):
                 break
-            s, p = found
-            placed.append((s, k, p))
-            for c in range(s, s + k):
-                g.available[c] = False
-                g.scheduled[c] = True
-            first = s + k + 1  # at least a 15-min break between sessions
-        if len(placed) < len(split_sessions(t.estimated_minutes)):
             for s, k, _ in placed:  # roll back partial placement
                 for c in range(s, s + k):
                     g.available[c] = True
                     g.scheduled[c] = False
+        if len(placed) < len(split_sessions(t.estimated_minutes)):
             reason = (
                 "no_free_slot_before_deadline"
                 if t.deadline is not None and t.deadline <= req.horizon_end
@@ -434,7 +481,7 @@ def schedule(
     items.sort(key=lambda x: (x.start, str(x.task_id)))
     at_risk: list[UUID] = []
     for it in sorted(items, key=lambda x: x.completion_probability):
-        if it.completion_probability < RISK_THRESHOLD and it.task_id not in at_risk:
+        if not it.is_fixed and it.completion_probability < RISK_THRESHOLD and it.task_id not in at_risk:
             at_risk.append(it.task_id)
     return ScheduleResult(
         user_id=req.user_id,

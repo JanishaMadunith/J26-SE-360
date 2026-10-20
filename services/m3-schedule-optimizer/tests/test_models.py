@@ -69,8 +69,10 @@ def test_wellness_standin_matches_module2_contract():
 
 
 def test_features_from_app_shape():
-    f = features_from_app(BehaviourProfile(on_time_rate=0.9, days_since_active=1), 3, 120, 5)
+    f = features_from_app(BehaviourProfile(on_time_rate=0.9, days_since_active=1), 3, 480, 5)
     assert f["H"] == 3 and f["is_tma"] == 1 and f["weight"] == 25.0 and f["prior_on_time_rate"] == 0.9
+    assert features_from_app(BehaviourProfile(), 1, 60, 3)["H"] == 8  # small task: 1 day is plenty of time
+    assert features_from_app(BehaviourProfile(), 10, 60, 3)["H"] == 14  # capped at OULAD's range
     new = features_from_app(BehaviourProfile(), 3, 60, 3)
     assert new["prior_on_time_rate"] is None and new["n_prior"] == 0  # no history -> "unknown", as in training
 

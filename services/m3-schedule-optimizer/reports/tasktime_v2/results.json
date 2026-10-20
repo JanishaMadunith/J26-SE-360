@@ -1,0 +1,119 @@
+{
+ "dataset": "MS-LaTTE",
+ "split": "same 80/20 split as tasktime.py (seed 42); validation = 20% of the training part",
+ "n_test": 2021,
+ "baselines": {
+  "always_most_common": 0.4161,
+  "one_person_vs_others": 0.3706
+ },
+ "models": [
+  {
+   "key": "v1",
+   "name": "v1 TF-IDF + logistic regression (current)",
+   "features": "word and letter counts",
+   "labels": "majority vote",
+   "C": 0.5,
+   "accuracy": 0.5631,
+   "top2_accuracy": 0.8466,
+   "macro_f1": 0.446,
+   "annotator_agreement": 0.4226,
+   "val_accuracy": 0.5613
+  },
+  {
+   "key": "v2",
+   "name": "v2 TF-IDF + LR, trained on all votes",
+   "features": "word and letter counts",
+   "labels": "all votes (soft labels)",
+   "C": 2,
+   "accuracy": 0.5596,
+   "top2_accuracy": 0.8525,
+   "macro_f1": 0.4592,
+   "annotator_agreement": 0.425,
+   "val_accuracy": 0.5582
+  },
+  {
+   "key": "v3",
+   "name": "v3 GloVe word vectors + LR",
+   "features": "pre-trained word meanings (spaCy en_core_web_lg)",
+   "labels": "majority vote",
+   "C": 0.25,
+   "accuracy": 0.5532,
+   "top2_accuracy": 0.8392,
+   "macro_f1": 0.4389,
+   "annotator_agreement": 0.4202,
+   "val_accuracy": 0.5705
+  },
+  {
+   "key": "v4",
+   "name": "v4 GloVe + LR, all votes",
+   "features": "pre-trained word meanings",
+   "labels": "all votes",
+   "C": 0.5,
+   "accuracy": 0.5517,
+   "top2_accuracy": 0.8441,
+   "macro_f1": 0.44,
+   "annotator_agreement": 0.4241,
+   "val_accuracy": 0.5687
+  },
+  {
+   "key": "v5",
+   "name": "v5 RoBERTa (frozen) + LR",
+   "features": "RoBERTa-base sentence vectors, not trained",
+   "labels": "majority vote",
+   "C": 0.25,
+   "accuracy": 0.5344,
+   "top2_accuracy": 0.8318,
+   "macro_f1": 0.3895,
+   "annotator_agreement": 0.4129,
+   "val_accuracy": null
+  },
+  {
+   "key": "v6",
+   "name": "v6 RoBERTa (frozen) + LR, all votes",
+   "features": "RoBERTa-base sentence vectors",
+   "labels": "all votes",
+   "C": 0.25,
+   "accuracy": 0.5383,
+   "top2_accuracy": 0.8288,
+   "macro_f1": 0.3759,
+   "annotator_agreement": 0.4198,
+   "val_accuracy": null
+  },
+  {
+   "key": "v7",
+   "name": "v7 RoBERTa fine-tuned",
+   "features": "RoBERTa-base, all 125M weights trained",
+   "labels": "all votes",
+   "val_accuracy": 0.5767,
+   "accuracy": 0.5799,
+   "top2_accuracy": 0.8634,
+   "macro_f1": 0.4878,
+   "annotator_agreement": 0.4326,
+   "val_curve": [
+    0.5582,
+    0.5625,
+    0.5767
+   ],
+   "epochs": 3,
+   "lr": 3e-05,
+   "batch": 32
+  },
+  {
+   "key": "v8",
+   "name": "v8 Ensemble (TF-IDF + GloVe + fine-tuned RoBERTa)",
+   "features": "weighted average of v1, v2, v4, v7",
+   "labels": "weights chosen on validation",
+   "weights": {
+    "v1": 1,
+    "v2": 3,
+    "v4": 3,
+    "v7": 3
+   },
+   "val_accuracy": 0.5947,
+   "accuracy": 0.5849,
+   "top2_accuracy": 0.8659,
+   "macro_f1": 0.4797,
+   "annotator_agreement": 0.4355
+  }
+ ]
+}

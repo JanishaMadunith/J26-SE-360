@@ -57,6 +57,7 @@ label.f output { font-weight: 600; font-variant-numeric: tabular-nums; }
 select, input[type="text"], input[type="number"] { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 button.primary { background: var(--accent); color: var(--bg); border: 0; border-radius: 8px; padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+button.ghost[aria-pressed="true"] { background: var(--accent-soft); }
 button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font: inherit; cursor: pointer; }
 button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 table { border-collapse: collapse; width: 100%; font-size: .9rem; }
@@ -64,7 +65,15 @@ th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line
 th { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
 td.num { font-variant-numeric: tabular-nums; }
 .tasks-edit { display: grid; gap: 6px; }
-.tasks-edit .t { display: grid; grid-template-columns: 1.6fr 1fr 80px 70px 80px 32px; gap: 6px; align-items: center; }
+.tasks-edit .t { display: grid; grid-template-columns: 1.3fr 1fr 70px 60px 105px 300px 32px; gap: 6px; align-items: center; }
+.fx { display: flex; gap: 4px; align-items: center; font-size: .8rem; flex-wrap: wrap; } .fx label { white-space: nowrap; }
+.fx input[type=time] { width: 112px; padding: 4px; }
+.fx input[type=time]:disabled { opacity: .35; }
+.fx .warn { color: var(--risk); font-size: .72rem; width: 100%; }
+.sess { cursor: pointer; }
+.sess:hover rect { stroke: var(--fg); stroke-width: 2; }
+.misslink { cursor: pointer; text-decoration: underline dotted; }
+.misslink:hover { color: var(--risk); }
 .tasks-edit .t.head { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .scroll { overflow-x: auto; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); }
@@ -75,6 +84,19 @@ td.num { font-variant-numeric: tabular-nums; }
   .tasks-edit .t { grid-template-columns: 1fr 1fr; }
   .tasks-edit .t.head { display: none; }
 }
+details.json { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+details.json > summary { cursor: pointer; padding: 8px 12px; font-size: .88rem; font-weight: 600; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+details.json > summary .tag { font: 600 .72rem/1 var(--mono, ui-monospace, Menlo, monospace); padding: 3px 7px; border-radius: 4px; }
+.tag.in { background: var(--accent-soft); color: var(--accent); }
+.tag.out { background: var(--good-soft); color: var(--good); }
+details.json .body { position: relative; border-top: 1px solid var(--line); }
+details.json pre { margin: 0; padding: 12px; max-height: 420px; overflow: auto; font: .78rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+details.json .copy { position: absolute; top: 6px; right: 14px; font-size: .75rem; }
+.jk { color: var(--accent); } .js { color: var(--good); } .jn { color: var(--mid); } .jb { color: var(--risk); }
+.jsongrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.calls { display: grid; gap: 8px; }
+.callrow { display: grid; grid-template-columns: 70px 1fr 70px 70px; gap: 8px; font-size: .85rem; align-items: center; }
+@media (max-width: 860px) { .jsongrid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -85,6 +107,7 @@ td.num { font-variant-numeric: tabular-nums; }
     <button role="tab" aria-selected="true" data-tab="p1">1 · Will it be done on time?</button>
     <button role="tab" aria-selected="false" data-tab="p2">2 · Plan my days</button>
     <button role="tab" aria-selected="false" data-tab="p3">3 · Models &amp; data</button>
+    <button role="tab" aria-selected="false" data-tab="p4">4 · JSON in / out</button>
   </nav>
 </div></header>
 
@@ -96,12 +119,15 @@ td.num { font-variant-numeric: tabular-nums; }
       <p class="muted small" style="margin:0">Each case is a real student task from the 2014J semester of OULAD, which the model never saw during training or tuning. Pick one to see the model's prediction next to what really happened, and why the model decided that.</p>
     </div>
     <div class="grid2">
-      <div class="card"><h3>Real cases (OULAD 2014J)</h3><div class="cases" id="cases"><span class="muted small">Loading…</span></div></div>
+      <div class="card"><h3>Real cases (OULAD 2014J)</h3>
+        <div class="row small" id="hfilter"><span class="muted">Days before deadline:</span>
+          <button class="ghost" data-h="all" aria-pressed="true">All</button><button class="ghost" data-h="14">14</button><button class="ghost" data-h="7">7</button><button class="ghost" data-h="3">3</button><button class="ghost" data-h="1">1</button></div>
+        <div class="cases" id="cases"><span class="muted small">Loading…</span></div></div>
       <div class="card" id="caseView"><span class="muted">Choose a case.</span></div>
     </div>
     <div class="card">
       <h2>What if…? Try your own user</h2>
-      <p class="muted small" style="margin:0">Move the sliders: the model recalculates the chance that a 2-hour task is finished on time.</p>
+      <p class="muted small" style="margin:0">Move the sliders: the model recalculates the chance that an assignment-sized task (about a day of work) is finished on time.</p>
       <div class="grid2" style="grid-template-columns:1fr 1fr">
         <div style="display:grid;gap:10px">
           <label class="f">Past tasks finished on time <output id="o_rate"></output><input type="range" id="w_rate" min="0" max="100" value="80"></label>
@@ -109,6 +135,7 @@ td.num { font-variant-numeric: tabular-nums; }
           <label class="f">Active days in the last week <output id="o_act"></output><input type="range" id="w_act" min="0" max="7" value="5"></label>
           <label class="f">Earlier tasks still unfinished <output id="o_unf"></output><input type="range" id="w_unf" min="0" max="5" value="0"></label>
           <label class="f">Overdue tasks <output id="o_od"></output><input type="range" id="w_od" min="0" max="5" value="0"></label>
+          <label class="f">Usually finishes early (+) or late (−), days <output id="o_early"></output><input type="range" id="w_early" min="-4" max="6" step="0.5" value="2"></label>
           <label class="f">Days left before the deadline <output id="o_due"></output><input type="range" id="w_due" min="1" max="14" value="3"></label>
           <label class="f">Priority (1 low – 5 high) <output id="o_pri"></output><input type="range" id="w_pri" min="1" max="5" value="4"></label>
         </div>
@@ -132,14 +159,42 @@ td.num { font-variant-numeric: tabular-nums; }
         <label class="f">Days to plan
           <select id="ndays"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
       </div>
+      <div class="row small"><span class="muted">Load a scenario:</span>
+        <button class="ghost" data-scn="s1">1 · Normal day</button><button class="ghost" data-scn="s2">2 · Deadline crunch</button>
+        <button class="ghost" data-scn="edge">Edge cases</button><button class="ghost" data-scn="over">Overload</button><button class="ghost" data-scn="empty">Empty list</button><button class="ghost" data-scn="lecture">Lecture 8–1</button></div>
       <div class="tasks-edit" id="taskEdit"></div>
       <div class="row"><button class="ghost" id="addTask">+ Add task</button><button class="primary" id="planBtn">Make my plan</button><span id="planMsg" class="small muted"></span></div>
     </div>
     <div class="card" id="planOut" hidden>
-      <div class="legend"><span><i style="background:var(--busy)"></i>work / class (ATUS)</span><span><i style="background:var(--good)"></i>likely on time</span><span><i style="background:var(--mid)"></i>uncertain</span><span><i style="background:var(--risk)"></i>at risk</span><span><i style="background:var(--accent)"></i>energy (wellness forecast)</span></div>
+      <div class="legend"><span><i style="background:var(--busy)"></i>work / class (ATUS)</span><span><i style="background:var(--good)"></i>likely on time</span><span><i style="background:var(--mid)"></i>uncertain</span><span><i style="background:var(--risk)"></i>at risk</span><span><i style="background:var(--accent)"></i>fixed event · dotted line = energy</span><span><i style="background:var(--mid-soft)"></i>meal break</span></div>
+      <div class="small muted">Tip: click a task block on the timeline (or its time in the table) to mark it as <b>missed</b> — the plan is re-made from the end of that slot.</div>
       <div class="scroll" id="timeline"></div>
+      <div id="missAsk"></div>
       <div id="wsrc" class="small muted"></div>
+      <div id="replanInfo"></div>
+      <div class="row" id="replanCtl">
+        <span class="small muted"><b>3 · Re-plan:</b></span>
+        <select id="missedSel" aria-label="task to mark as missed"></select><button class="ghost" id="missBtn">Mark as missed</button>
+        <span class="muted small">or</span>
+        <input type="text" id="urgTitle" value="Urgent client fix" aria-label="urgent task title">
+        <input type="number" id="urgMin" value="120" min="15" max="600" step="15" aria-label="minutes">
+        <button class="ghost" id="urgBtn">Add urgent task for today</button>
+      </div>
       <div class="scroll"><table id="planTable"></table></div>
+      <h3>JSON in / JSON out</h3>
+      <p class="small muted" style="margin:0">Left: what goes <b>into</b> Module 3. Right: what Module 3 sends <b>back</b>. The lower pair is the real
+        Module 3 contract (<code>POST /v1/schedule</code>) — exactly what the Core API will send and receive in the finished system.</p>
+      <div id="planJson" style="display:grid;gap:10px"></div>
+    </div>
+  </section>
+
+  <!-- ======================= 4. JSON log ======================= -->
+  <section class="panel" id="p4" hidden>
+    <div class="card">
+      <h2>JSON in / JSON out — every call this page made</h2>
+      <p class="muted small" style="margin:0">Module 3 is a web service: every question is a JSON request and every answer is a JSON response. Newest first; click to open.</p>
+      <div class="row"><button class="ghost" id="clearCalls">Clear</button></div>
+      <div class="calls" id="calls"><span class="muted small">No calls yet — use tab 1 or 2.</span></div>
     </div>
   </section>
 
@@ -167,10 +222,48 @@ const $ = (s) => document.querySelector(s);
 const pct = (p) => Math.round(p * 100) + "%";
 const level = (p) => (p >= 0.65 ? "good" : p >= 0.45 ? "mid" : "risk");
 const word = { good: "Likely on time", mid: "Uncertain", risk: "At risk" };
+// ---------- JSON helpers: every call is logged so the page can show JSON in / JSON out
+const CALLS = [];
+function esc(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function hl(obj) {
+  const txt = esc(JSON.stringify(obj, null, 2) ?? "null");
+  return txt.replace(/("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g, (m, str, colon, lit, num) =>
+    str ? (colon ? `<span class="jk">${str}</span>${colon}` : `<span class="js">${str}</span>`) : lit ? `<span class="jb">${lit}</span>` : `<span class="jn">${num}</span>`);
+}
+let jsonId = 0;
+const JSON_STORE = {};
+function jsonBox(kind, title, obj, open = false) {
+  const id = "j" + jsonId++;
+  JSON_STORE[id] = obj;
+  const size = (JSON.stringify(obj) || "").length;
+  return `<details class="json" ${open ? "open" : ""}><summary><span class="tag ${kind}">${kind === "in" ? "JSON IN" : "JSON OUT"}</span>${title}<span class="small muted">${(size / 1024).toFixed(1)} KB</span></summary>
+    <div class="body"><button class="ghost copy" data-copy="${id}">Copy</button><pre>${hl(obj)}</pre></div></details>`;
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const text = JSON.stringify(JSON_STORE[b.dataset.copy], null, 2);
+  try { await navigator.clipboard.writeText(text); b.textContent = "Copied"; } catch { b.textContent = "Select & copy"; }
+  setTimeout(() => (b.textContent = "Copy"), 1500);
+});
 async function api(path, body) {
+  const t0 = performance.now();
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
-  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
-  return r.json();
+  const data = await r.json().catch(() => ({}));
+  CALLS.unshift({ method: body ? "POST" : "GET", path, status: r.status, ms: Math.round(performance.now() - t0), req: body ?? null, res: data, at: new Date() });
+  if (CALLS.length > 40) CALLS.pop();
+  renderCalls();
+  if (!r.ok) throw new Error(data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : r.statusText);
+  return data;
+}
+function renderCalls() {
+  const el = document.getElementById("calls");
+  if (!el) return;
+  el.innerHTML = CALLS.length ? CALLS.map((c) => `<details class="json"><summary>
+      <span class="tag ${c.status < 400 ? "out" : "in"}">${c.method}</span><code>${c.path}</code>
+      <span class="pill ${c.status < 400 ? "good" : "risk"}">${c.status}</span><span class="small muted">${c.ms} ms · ${c.at.toLocaleTimeString()}</span></summary>
+      <div class="jsongrid" style="padding:10px">${c.req !== null ? jsonBox("in", "Request body", c.req) : '<div class="small muted">GET — no request body</div>'}${jsonBox("out", "Response body", c.res)}</div></details>`).join("")
+    : '<span class="muted small">No calls yet — use tab 1 or 2.</span>';
 }
 document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll("nav.tabs button").forEach((x) => x.setAttribute("aria-selected", x === b));
@@ -209,13 +302,14 @@ async function showCase(c, btn) {
         <div><b>${s.active_7 ?? "—"}</b><span>active days last week</span></div>
         <div><b>${s.n_prior_outstanding ?? "—"}</b><span>earlier tasks unfinished</span></div>
       </div>
-      <h3>Why (top reasons, SHAP)</h3>${reasonsHTML(r.reasons)}`;
+      <h3>Why (top reasons, SHAP)</h3>${reasonsHTML(r.reasons)}
+      <div class="jsongrid">${jsonBox("in", "POST /v1/completion/predict — the 65 model inputs", { features: c.features })}${jsonBox("out", "Model answer", r)}</div>`;
   } catch (e) { v.innerHTML = `<span class="err">${e.message}</span>`; }
 }
-api("/v1/completion/examples").then((ex) => {
-  cases = ex;
+function renderCases(h) {
   $("#cases").innerHTML = "";
-  ex.forEach((c, i) => {
+  const list = cases.filter((c) => h === "all" || c.days_before_deadline === +h);
+  list.forEach((c, i) => {
     const b = document.createElement("button");
     b.className = "case";
     b.innerHTML = `<span><b>${c.id}</b> <span class="small muted">· ${c.course} · ${c.days_before_deadline}d before</span></span><span class="pill ${c.actual_on_time ? "good" : "risk"}">${c.actual_on_time ? "on time" : "not on time"}</span>`;
@@ -223,10 +317,16 @@ api("/v1/completion/examples").then((ex) => {
     $("#cases").appendChild(b);
     if (i === 0) showCase(c, b);
   });
-}).catch((e) => ($("#cases").innerHTML = `<span class="err">${e.message}</span>`));
+}
+document.querySelectorAll("#hfilter button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("#hfilter button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  renderCases(b.dataset.h);
+}));
+api("/v1/completion/examples").then((ex) => { cases = ex; renderCases("all"); })
+  .catch((e) => ($("#cases").innerHTML = `<span class="err">${e.message}</span>`));
 
 // ---------- 1b. what-if
-const sliders = { rate: (v) => v + "%", days: (v) => v, act: (v) => v, unf: (v) => v, od: (v) => v, due: (v) => v, pri: (v) => v };
+const sliders = { rate: (v) => v + "%", days: (v) => v, act: (v) => v, unf: (v) => v, od: (v) => v, early: (v) => (v > 0 ? "+" : "") + v, due: (v) => v, pri: (v) => v };
 let wiTimer;
 function whatIf() {
   for (const k in sliders) $("#o_" + k).textContent = sliders[k]($("#w_" + k).value);
@@ -234,12 +334,14 @@ function whatIf() {
   wiTimer = setTimeout(async () => {
     const body = {
       profile: { on_time_rate: $("#w_rate").value / 100, days_since_active: +$("#w_days").value, active_days_7: +$("#w_act").value,
-        unfinished_earlier_tasks: +$("#w_unf").value, overdue_tasks: +$("#w_od").value, tasks_done_before: 8 },
-      task: { title: "task", estimated_minutes: 120, priority: +$("#w_pri").value, due_in_days: +$("#w_due").value },
+        unfinished_earlier_tasks: +$("#w_unf").value, overdue_tasks: +$("#w_od").value, tasks_done_before: 8,
+        usual_days_early: +$("#w_early").value },
+      task: { title: "task", estimated_minutes: 480, priority: +$("#w_pri").value, due_in_days: +$("#w_due").value },
     };
     try {
       const r = await api("/v1/completion/predict", body);
-      $("#whatif").innerHTML = probHTML(r.probability_on_time) + "<h3>Top reasons</h3>" + reasonsHTML(r.reasons);
+      $("#whatif").innerHTML = probHTML(r.probability_on_time) + "<h3>Top reasons</h3>" + reasonsHTML(r.reasons) +
+        jsonBox("in", "POST /v1/completion/predict — request", body) + jsonBox("out", "Model answer", r);
     } catch (e) { $("#whatif").innerHTML = `<span class="err">${e.message}</span>`; }
   }, 150);
 }
@@ -248,17 +350,26 @@ whatIf();
 
 // ---------- 2. planner
 const CATS = ["study", "work", "exercise", "chores", "personal", "social", "other"];
-let tasks = [
-  { title: "Write research report", category: "study", estimated_minutes: 180, priority: 5, due_in_days: 2 },
-  { title: "Read research papers", category: "study", estimated_minutes: 90, priority: 3, due_in_days: 3 },
-  { title: "Go to the gym", category: "exercise", estimated_minutes: 60, priority: 2, due_in_days: 3 },
-  { title: "Team meeting prep", category: "work", estimated_minutes: 45, priority: 4, due_in_days: 1 },
-  { title: "Pay electricity bill", category: "chores", estimated_minutes: 15, priority: 3, due_in_days: 2 },
-  { title: "Call mom", category: "personal", estimated_minutes: 30, priority: 2, due_in_days: 3 },
-];
+const T = (title, category, estimated_minutes, priority, due_day, fixed = null) => ({ title, category, estimated_minutes, priority, due_day, fixed });
+const SCN = {
+  s1: [T("Morning run", "exercise", 45, 3, 0), T("Team meeting", "work", 60, 4, 0), T("Buy groceries", "chores", 45, 3, 1),
+       T("Review lecture notes", "study", 90, 3, 2), T("Watch a movie", "personal", 120, 1, null)],
+  s2: [T("Assignment 1 report", "study", 240, 5, 1), T("Project work", "study", 180, 5, 1), T("Quiz preparation", "study", 120, 4, 2),
+       T("Submit lab sheet", "study", 60, 5, 0), T("Gym", "exercise", 60, 2, 0)],
+  edge: [T("Read a novel", "personal", 60, 2, null), T("Pay last month's bill", "chores", 30, 4, -1),
+         T("Lab report", "study", 90, 4, 1), T("Lab report", "study", 90, 3, 3)],
+  over: [0, 1, 2, 3, 4].map((i) => T("Big assignment " + (i + 1), "study", 480, 4, 1)),
+  empty: [],
+  lecture: [T("Lecture", "study", 300, 5, 0, "08:00-13:00"), T("Review today's lecture notes", "study", 60, 4, 0),
+            T("Assignment draft", "study", 180, 5, 1), T("Gym", "exercise", 60, 2, 0), T("Buy groceries", "chores", 45, 3, 0),
+            T("Call mom", "personal", 30, 2, 0)],
+};
+let tasks = SCN.s1.map((t) => ({ ...t }));
+let lastPlan = null, lastReq = null;
+const DUE = [["-1", "Passed"], ["0", "Today"], ["1", "Tomorrow"], ["2", "In 2 days"], ["3", "In 3 days"], ["4", "In 4 days"], ["", "None"]];
 function renderTasks() {
   const el = $("#taskEdit");
-  el.innerHTML = `<div class="t head"><span>Task</span><span>Category</span><span>Minutes</span><span>Priority</span><span>Due in days</span><span></span></div>`;
+  el.innerHTML = `<div class="t head"><span>Task</span><span>Category</span><span>Minutes</span><span>Priority</span><span>Due</span><span>Fixed time</span><span></span></div>`;
   tasks.forEach((t, i) => {
     const row = document.createElement("div");
     row.className = "t";
@@ -266,17 +377,48 @@ function renderTasks() {
       <select id="tc${i}" aria-label="category">${CATS.map((c) => `<option ${c === t.category ? "selected" : ""}>${c}</option>`).join("")}</select>
       <input type="number" id="tm${i}" min="15" max="600" step="15" value="${t.estimated_minutes}" aria-label="minutes">
       <input type="number" id="tp${i}" min="1" max="5" value="${t.priority}" aria-label="priority">
-      <input type="number" id="td${i}" min="0.25" max="5" step="0.25" value="${t.due_in_days}" aria-label="due in days">
+      <select id="td${i}" aria-label="due">${DUE.map(([v, lab]) => `<option value="${v}" ${String(t.due_day ?? "") === v ? "selected" : ""}>${lab}</option>`).join("")}</select>
+      <div class="fx"><label title="Fixed event at a set time (lecture, meeting) — otherwise the model picks the time"><input type="checkbox" id="tfx${i}" ${t.fixed ? "checked" : ""}> fixed</label>
+        <input type="time" id="tfs${i}" step="900" value="${fixParts(t.fixed)[0]}" ${t.fixed ? "" : "disabled"} aria-label="fixed start">–<input type="time" id="tfe${i}" step="900" value="${fixParts(t.fixed)[1]}" ${t.fixed ? "" : "disabled"} aria-label="fixed end">
+        <span class="warn" id="tfw${i}"></span></div>
       <button class="ghost" title="remove" aria-label="remove task">×</button>`;
-    row.querySelector("button").onclick = () => { readTasks(); tasks.splice(i, 1); renderTasks(); };
+    row.querySelector("button.ghost").onclick = () => { try { readTasks(); } catch (e) { /* ignore */ } tasks.splice(i, 1); renderTasks(); };
+    const fx = row.querySelector("#tfx" + i), fs = row.querySelector("#tfs" + i), fe = row.querySelector("#tfe" + i), tm = row.querySelector("#tm" + i);
+    const sync = () => {
+      fs.disabled = fe.disabled = !fx.checked;
+      row.querySelector("#tfw" + i).textContent = fx.checked ? fixErr(fs.value, fe.value) : "";
+    };
+    fx.onchange = () => { if (fx.checked && !fs.value) { fs.value = "08:00"; fe.value = addMin("08:00", +tm.value); } sync(); };
+    fs.onchange = () => { fe.value = addMin(fs.value, +tm.value); sync(); };   // keep the task's length when the start moves
+    fe.onchange = () => { const m = toMin(fe.value) - toMin(fs.value); if (m > 0) tm.value = m; sync(); };
+    sync();
     el.appendChild(row);
   });
 }
-function readTasks() {
-  tasks = tasks.map((t, i) => ({ title: $("#tt" + i).value || "task", category: $("#tc" + i).value, estimated_minutes: +$("#tm" + i).value,
-    priority: +$("#tp" + i).value, due_in_days: +$("#td" + i).value }));
+function fixParts(f) { const m = (f || "").match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/); return m ? [`${m[1].padStart(2, "0")}:${m[2]}`, `${m[3].padStart(2, "0")}:${m[4]}`] : ["", ""]; }
+const toMin = (hm) => { const [h, m] = (hm || "0:0").split(":").map(Number); return h * 60 + m; };
+const addMin = (hm, n) => { const t = Math.min(toMin(hm) + (n || 60), 23 * 60 + 45); return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+function fixErr(a, b) {
+  if (!a || !b) return "set start and end";
+  if (toMin(b) <= toMin(a)) return "end must be after start";
+  if (toMin(a) < 360) return "starts before 06:00";
+  return "";
 }
-$("#addTask").onclick = () => { readTasks(); if (tasks.length < 12) tasks.push({ title: "New task", category: "other", estimated_minutes: 60, priority: 3, due_in_days: 2 }); renderTasks(); };
+function readTasks() {   // fixed time is sent as "HH:MM-HH:MM"; its length becomes the task's minutes
+  tasks = tasks.map((t, i) => {
+    const a = $("#tfs" + i).value, b = $("#tfe" + i).value, fixed = $("#tfx" + i).checked ? `${a}-${b}` : null;
+    if (fixed && fixErr(a, b)) throw new Error(`"${$("#tt" + i).value}": fixed time — ${fixErr(a, b)}`);
+    return { title: $("#tt" + i).value || "task", category: $("#tc" + i).value, estimated_minutes: fixed ? toMin(b) - toMin(a) : +$("#tm" + i).value,
+      priority: +$("#tp" + i).value, due_day: $("#td" + i).value === "" ? null : +$("#td" + i).value, fixed };
+  });
+}
+$("#addTask").onclick = () => { try { readTasks(); } catch (e) { /* keep as typed */ } if (tasks.length < 15) tasks.push(T("New task", "other", 60, 3, 2)); renderTasks(); };
+document.querySelectorAll("[data-scn]").forEach((b) => b.addEventListener("click", () => {
+  tasks = SCN[b.dataset.scn].map((t) => ({ ...t }));
+  if (b.dataset.scn === "s2") $("#prate").value = "0.7";
+  if (b.dataset.scn === "lecture") $("#persona").value = "free";
+  renderTasks(); $("#planBtn").click();
+}));
 renderTasks();
 
 const fmtT = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Colombo" });
@@ -288,7 +430,7 @@ function colomboHours(iso) {
 function dayKey(iso) { return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" }); }
 
 function drawTimeline(plan) {
-  const H0 = 6, H1 = 23, W = 980, left = 90, rowH = 64, pxh = (W - left - 10) / (H1 - H0);
+  const H0 = 6, H1 = 24, W = 980, left = 90, rowH = 64, pxh = (W - left - 10) / (H1 - H0);
   const days = [...new Set(plan.wellness.hourly.filter((s) => colomboHours(s.start) >= H0 + 1).map((s) => dayKey(s.start)))];
   const ys = (d) => 26 + days.indexOf(d) * rowH;
   let svg = `<svg viewBox="0 0 ${W} ${30 + days.length * rowH}" width="${W}" role="img" aria-label="schedule timeline">`;
@@ -306,6 +448,17 @@ function drawTimeline(plan) {
     const a = Math.max(H0, colomboHours(b.start)), e = Math.min(H1, colomboHours(b.end) || 24);
     if (e > a) svg += `<rect x="${left + (a - H0) * pxh}" y="${ys(d) + 4}" width="${(e - a) * pxh}" height="${rowH - 10}" fill="var(--busy)" rx="4"/>`;
   });
+  (plan.meals || []).forEach((m) => {
+    const d = dayKey(m.start); if (!days.includes(d)) return;
+    const a = colomboHours(m.start), e = colomboHours(m.end);
+    svg += `<g><title>meal break (kept free for Module 4)</title><rect x="${left + (a - H0) * pxh}" y="${ys(d) + 4}" width="${(e - a) * pxh}" height="${rowH - 10}" fill="var(--mid-soft)" rx="3"/>
+      <text x="${left + (a - H0) * pxh + 2}" y="${ys(d) + rowH - 10}" font-size="9" fill="var(--mid)">meal</text></g>`;
+  });
+  const ms = plan.replan && plan.replan.missed_slot;
+  if (ms) {
+    const d = dayKey(ms.start), a = colomboHours(ms.start), e = colomboHours(ms.end);
+    svg += `<rect x="${left + (a - H0) * pxh}" y="${ys(d) + 8}" width="${(e - a) * pxh}" height="${rowH - 18}" fill="none" stroke="var(--risk)" stroke-width="2" stroke-dasharray="4 3" rx="5"><title>missed</title></rect>`;
+  }
   days.forEach((d) => {   // energy line
     const pts = plan.wellness.hourly.filter((s) => dayKey(s.start) === d).map((s) => {
       const h = colomboHours(s.start) + 0.5; if (h < H0 || h > H1) return null;
@@ -315,40 +468,89 @@ function drawTimeline(plan) {
   plan.tasks.forEach((t) => t.sessions.forEach((s) => {
     const d = dayKey(s.start), a = colomboHours(s.start), e = colomboHours(s.end) || 24, l = level(s.p);
     const x = left + (a - H0) * pxh, w = Math.max(4, (e - a) * pxh);
-    svg += `<g><title>${t.title}: ${fmtT(s.start)}–${fmtT(s.end)}, ${pct(s.p)} chance on time</title>
-      <rect x="${x}" y="${ys(d) + 12}" width="${w}" height="${rowH - 26}" fill="var(--${l})" rx="5" opacity=".9"/>
+    svg += `<g ${t.fixed ? "" : `class="sess" data-key="${t.task_key}" data-start="${s.start}"`}><title>${t.title}: ${fmtT(s.start)}–${fmtT(s.end)}, ${t.fixed ? "fixed event" : pct(s.p) + " chance on time — click to mark as missed"}</title>
+      <rect x="${x}" y="${ys(d) + 12}" width="${w}" height="${rowH - 26}" fill="var(--${t.fixed ? "accent" : l})" rx="5" opacity=".9"/>
       <text x="${x + 4}" y="${ys(d) + 30}" font-size="10.5" fill="var(--bg)" font-weight="600">${w > 40 ? t.title.slice(0, Math.floor(w / 6.2)) : ""}</text>
-      <text x="${x + 4}" y="${ys(d) + 43}" font-size="10" fill="var(--bg)">${w > 34 ? pct(s.p) : ""}</text></g>`;
+      <text x="${x + 4}" y="${ys(d) + 43}" font-size="10" fill="var(--bg)">${w > 34 ? (t.fixed ? "fixed" : pct(s.p)) + (s.kept ? " ·kept" : "") : ""}</text></g>`;
   }));
   return svg + "</svg>";
 }
 
-$("#planBtn").onclick = async () => {
-  readTasks();
-  $("#planMsg").textContent = "Planning…";
+function profileBody() {
   const rate = +$("#prate").value;
+  return { on_time_rate: rate, tasks_done_before: 8, days_since_active: rate > 0.5 ? 1 : 6, active_days_7: rate > 0.5 ? 5 : 2,
+    unfinished_earlier_tasks: rate > 0.5 ? 0 : 2, overdue_tasks: rate > 0.5 ? 0 : 1, upcoming_deadlines_7d: 0 };
+}
+function dueText(t) { return t.due_day === null ? "no deadline" : t.due_day < 0 ? "deadline passed" : ["due today", "due tomorrow"][t.due_day] || `due in ${t.due_day} days`; }
+function renderPlan(plan, sent, path) {
+  lastPlan = plan;
+  const ct = plan.contract;
+  const shown = { ...plan }; delete shown.contract;
+  $("#planJson").innerHTML = `<div class="jsongrid">${jsonBox("in", `Page → ${path || "POST /v1/demo/plan"}`, sent || lastReq)}${jsonBox("out", "Demo answer (what the page draws)", shown)}</div>` +
+    (ct ? `<div class="jsongrid">${jsonBox("in", "Module 3 contract — ScheduleRequest (Core API → M3)", ct.request, true)}${jsonBox("out", "Module 3 contract — ScheduleResult (M3 → Core API)", ct.response, true)}</div>
+      <div class="small muted">Task IDs in the contract: ${Object.entries(ct.task_titles).map(([k, v]) => `<code>${k.slice(0, 8)}…</code> = ${v}`).join(" · ")}</div>` : "");
+  $("#planOut").hidden = false;
+  $("#timeline").innerHTML = drawTimeline(plan);
+  const sm = plan.summary;
+  $("#wsrc").innerHTML = `<div class="row"><span class="pill neutral">${sm.tasks} tasks · ${sm.planned_hours} h</span><span class="pill ${sm.at_risk ? "risk" : "good"}">${sm.at_risk} at risk</span>${sm.unscheduled ? `<span class="pill risk">${sm.unscheduled} not placed</span>` : ""}${plan.overload_predicted ? `<span class="pill risk">⚠ overload: more work than free time before the deadlines</span>` : ""}</div>
+    <div class="small muted">Wellness: ${plan.wellness.source}. Busy hours: ${$("#persona").selectedOptions[0].text}. Models: ${plan.model.completion_model}, ${plan.model.tasktime_model}.</div>`;
+  const rp = plan.replan;
+  $("#replanInfo").innerHTML = rp ? `<div class="card" style="background:var(--accent-soft)"><b>Re-planned (${rp.change === "missed" ? "task missed" : "urgent task added"})</b>
+      <div class="small">Mode: <b>${rp.mode}</b> · kept ${rp.kept_sessions} existing session(s) in place · moved: ${rp.moved_tasks.length ? rp.moved_tasks.map((k) => plan.tasks.find((t) => t.task_key === k).title).join(", ") : "nothing"} · now = ${fmtD(rp.now)} ${fmtT(rp.now)}</div></div>` : "";
+  $("#missedSel").innerHTML = plan.tasks.filter((t) => t.sessions.length && !t.fixed).map((t) => `<option value="${t.task_key}">${t.title}</option>`).join("");
+  $("#replanCtl").hidden = !plan.tasks.some((t) => t.sessions.length);
+  $("#planTable").innerHTML = `<tr><th>Task</th><th>Model: chance on time (before planning)</th><th>Best time of day</th><th>Scheduled (chance in that slot)</th><th>Main reasons</th></tr>` +
+    (plan.tasks.length ? "" : `<tr><td colspan="5" class="muted">No tasks — nothing to plan. Add a task or load a scenario.</td></tr>`) +
+    plan.tasks.map((t) => {
+      const p = t.p_on_time_model, l = p === null ? "neutral" : level(p);
+      const when = t.sessions.length ? t.sessions.map((s) => `${t.fixed ? "" : `<span class="misslink" data-key="${t.task_key}" data-start="${s.start}" title="Click to mark as missed">`}${fmtD(s.start)} ${fmtT(s.start)}–${fmtT(s.end)}${t.fixed ? "" : "</span>"} ${t.fixed ? '<span class="small muted">stays fixed</span>' : `<span class="pill ${level(s.p)}">${pct(s.p)}</span>`}${s.kept ? ' <span class="small muted">kept</span>' : ""}`).join("<br>")
+        : `<span class="pill risk">not placed: ${(t.unscheduled || "").replaceAll("_", " ")}</span>`;
+      const parts = t.parts ? Object.entries(t.parts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `${k} ${pct(v)}`).join(", ") : "—";
+      return `<tr><td><b>${t.title}</b><div class="small muted">${t.category} · ${t.estimated_minutes} min · priority ${t.priority} · ${t.fixed ? "fixed " + t.fixed : dueText(t)}</div></td>
+        <td class="num">${t.fixed ? '<span class="pill neutral">fixed event</span>' : `<span class="pill ${l}">${p === null ? "—" : pct(p)}</span>`}</td><td>${parts}</td><td>${when}</td>
+        <td class="small">${t.reasons.map((r) => `${r.label} <b style="color:var(--${r.effect > 0 ? "good" : "risk"})">${r.direction}</b>`).join("<br>")}</td></tr>`;
+    }).join("");
+  $("#missAsk").innerHTML = "";
+  document.querySelectorAll("#timeline .sess, #planTable .misslink").forEach((el) => el.addEventListener("click", () => askMissed(el.dataset.key, el.dataset.start)));
+  (lastReq ? lastReq.tasks : []).forEach((t, i) => {   // warn when a fixed event sits inside the persona's work/class hours
+    const w = $("#tfw" + i), tk = plan.tasks[i], s = tk && tk.sessions[0];
+    if (!w || !t.fixed || !s || fixErr(...fixParts(t.fixed))) return;
+    const hit = plan.busy.some((b) => new Date(b.start) < new Date(s.end) && new Date(s.start) < new Date(b.end));
+    w.textContent = hit ? "inside busy hours — if this is your class, set Busy hours to “No fixed hours”" : "";
+  });
+}
+function askMissed(key, start) {
+  const t = lastPlan.tasks.find((x) => x.task_key === key), s = t.sessions.find((x) => x.start === start) || t.sessions[0];
+  $("#missAsk").innerHTML = `<div class="card row" style="background:var(--risk-soft)"><span>Mark <b>${t.title}</b> (${fmtD(s.start)} ${fmtT(s.start)}–${fmtT(s.end)}) as <b>missed</b> and re-plan?</span>
+    <button id="missYes">Yes, mark as missed</button><button class="ghost" id="missNo">Cancel</button></div>`;
+  $("#missNo").onclick = () => { $("#missAsk").innerHTML = ""; };
+  $("#missYes").onclick = () => doReplan({ kind: "missed", task_key: key, session_start: s.start });
+  $("#missedSel").value = key;
+  $("#missAsk").scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+async function doPlan() {
+  try { readTasks(); } catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; return; }
+  $("#planMsg").textContent = "Planning…";
+  lastReq = { persona: $("#persona").value, wellness_day: $("#wday").value, days: +$("#ndays").value, tasks, profile: profileBody() };
+  try { renderPlan(await api("/v1/demo/plan", lastReq), lastReq, "POST /v1/demo/plan"); $("#planMsg").textContent = ""; }
+  catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+async function doReplan(change) {
+  if (!lastPlan) return;
+  const previous = lastPlan.tasks.flatMap((t) => t.sessions.map((s) => ({ task_key: t.task_key, start: s.start, end: s.end, p: s.p })));
+  $("#planMsg").textContent = "Re-planning…";
   try {
-    const plan = await api("/v1/demo/plan", {
-      persona: $("#persona").value, wellness_day: $("#wday").value, days: +$("#ndays").value, tasks,
-      profile: { on_time_rate: rate, tasks_done_before: 8, days_since_active: rate > 0.5 ? 1 : 6, active_days_7: rate > 0.5 ? 5 : 2,
-        unfinished_earlier_tasks: rate > 0.5 ? 0 : 2, overdue_tasks: rate > 0.5 ? 0 : 1, upcoming_deadlines_7d: tasks.length },
-    });
-    $("#planOut").hidden = false;
-    $("#timeline").innerHTML = drawTimeline(plan);
-    $("#wsrc").textContent = `Wellness: ${plan.wellness.source}. Busy hours: ${$("#persona").selectedOptions[0].text}. Models: ${plan.model.completion_model}, ${plan.model.tasktime_model}.${plan.overload_predicted ? " ⚠ Overload predicted: not everything fits before its deadline." : ""}`;
-    $("#planTable").innerHTML = `<tr><th>Task</th><th>Model: chance on time (before planning)</th><th>Best time of day</th><th>Scheduled (chance in that slot)</th><th>Main reasons</th></tr>` +
-      plan.tasks.map((t) => {
-        const p = t.p_on_time_model, l = p === null ? "neutral" : level(p);
-        const when = t.sessions.length ? t.sessions.map((s) => `${fmtD(s.start)} ${fmtT(s.start)}–${fmtT(s.end)} <span class="pill ${level(s.p)}">${pct(s.p)}</span>`).join("<br>")
-          : `<span class="pill risk">not placed: ${t.unscheduled}</span>`;
-        const parts = t.parts ? Object.entries(t.parts).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, v]) => `${k} ${pct(v)}`).join(", ") : "—";
-        return `<tr><td><b>${t.title}</b><div class="small muted">${t.category} · ${t.estimated_minutes} min · priority ${t.priority}</div></td>
-          <td class="num"><span class="pill ${l}">${p === null ? "—" : pct(p)}</span></td><td>${parts}</td><td>${when}</td>
-          <td class="small">${t.reasons.map((r) => `${r.label} <b style="color:var(--${r.effect > 0 ? "good" : "risk"})">${r.direction}</b>`).join("<br>")}</td></tr>`;
-      }).join("");
-    $("#planMsg").textContent = "";
+    const sent = { plan: lastReq, previous, change };
+    const plan = await api("/v1/demo/replan", sent);
+    if (change.kind === "add") { lastReq = { ...lastReq, tasks: [...lastReq.tasks, change.new_task] }; tasks = lastReq.tasks.map((t) => ({ ...t })); renderTasks(); }
+    renderPlan(plan, sent, "POST /v1/demo/replan"); $("#planMsg").textContent = "";
   } catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; }
-};
+}
+$("#planBtn").onclick = doPlan;
+$("#missBtn").onclick = () => doReplan({ kind: "missed", task_key: $("#missedSel").value });
+$("#urgBtn").onclick = () => doReplan({ kind: "add", new_task: T($("#urgTitle").value || "Urgent task", "work", +$("#urgMin").value, 5, 0) });
+
+document.getElementById("clearCalls").onclick = () => { CALLS.length = 0; renderCalls(); };
 
 // ---------- 3. status
 api("/v1/demo/context").then((c) => {

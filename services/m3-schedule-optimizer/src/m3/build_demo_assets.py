@@ -44,7 +44,7 @@ def _clean(v):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples-cache", default=None)
-    ap.add_argument("--n", type=int, default=24)
+    ap.add_argument("--n", type=int, default=24, help="cases in total (spread over the 4 horizons)")
     a = ap.parse_args()
     if a.samples_cache:
         df = pd.read_pickle(a.samples_cache)
@@ -67,25 +67,28 @@ def main():
     (MODELS_DIR / "completion_defaults.json").write_text(json.dumps(defaults, indent=1))
     print(f"wrote {MODELS_DIR / 'completion_defaults.json'}")
 
-    # real held-out cases at 3 and 7 days before the deadline
-    te = df[(df.code_presentation == TEST_PRESENTATION) & df.H.isin([3, 7])].copy()
+    # real held-out cases at 14, 7, 3 and 1 day(s) before the deadline
+    te = df[df.code_presentation == TEST_PRESENTATION].copy()
     model = CompletionModel()
-    sample = te.sample(min(len(te), 20000), random_state=SEED)
+    sample = pd.concat([g.sample(min(len(g), 6000), random_state=SEED) for _, g in te.groupby("H")])
     rows = [{c: _clean(r[c]) for c in F} for _, r in sample[F].iterrows()]
     sample["p"] = model.predict(rows)
     thr = model.threshold
     sample["pred"] = (sample.p >= thr).astype(int)
-    q = a.n // 4
-    picks = pd.concat(
-        [
-            sample[(sample.y == 1) & (sample.p > 0.85)].head(q),  # clearly on time, correct
-            sample[(sample.y == 0) & (sample.p < 0.15)].head(q),  # clearly at risk, correct
-            sample[(sample.p > 0.4) & (sample.p < 0.65)].head(q),  # borderline
-            sample[sample.pred != sample.y].head(q),  # honest mistakes
+    per_h = max(1, a.n // 4)
+    parts = []
+    for _, g in sample.groupby("H"):  # per horizon: clear on-time, clear at-risk, borderline, an honest mistake
+        q = max(1, per_h // 4)
+        parts += [
+            g[(g.y == 1) & (g.p > 0.8)].head(q),
+            g[(g.y == 0) & (g.p < 0.2)].head(q),
+            g[(g.p > 0.4) & (g.p < 0.65)].head(q),
+            g[g.pred != g.y].head(per_h - 3 * q),
         ]
-    ).drop_duplicates(subset=["id_student", "id_assessment", "H"])
+    picks = pd.concat(parts).drop_duplicates(subset=["id_student", "id_assessment", "H"])
     out = []
-    for i, (_, r) in enumerate(picks.sample(frac=1, random_state=SEED).iterrows(), 1):
+    picks = picks.sort_values(["H", "p"], ascending=[False, False])
+    for i, (_, r) in enumerate(picks.iterrows(), 1):
         out.append(
             {
                 "id": f"case-{i:02d}",

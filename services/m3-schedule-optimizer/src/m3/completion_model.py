@@ -70,7 +70,19 @@ LABELS = {
     "deadline_frac": "How far into the course the task is",
 }
 # Map app priority (1-5) to an OULAD-style weight in percent (median OULAD weight is 10).
+ASSIGNMENT_MINUTES = 480  # typical effort of an OULAD assignment, used by effective_horizon()
 PRIORITY_WEIGHT = {1: 0.0, 2: 5.0, 3: 10.0, 4: 18.0, 5: 25.0}
+
+
+def effective_horizon(days_to_deadline: float, estimated_minutes: int) -> float:
+    """OULAD's 'days before the deadline' (H) for an app task.
+
+    OULAD tasks are assignments that take roughly a full day of work, so being 1 day from the deadline with the work
+    not handed in is a real warning sign. A 45-minute errand due tonight is not in the same situation. The time left is
+    therefore scaled by how small the task is compared with a ~8-hour assignment (never shrunk for bigger tasks), then
+    kept inside OULAD's range of 0-14 days. An assumption until the model is fine-tuned on pilot task logs."""
+    scale = max(1.0, ASSIGNMENT_MINUTES / max(15, estimated_minutes))
+    return float(min(max(days_to_deadline, 0.0) * scale, 14.0))
 
 
 @dataclass
@@ -86,6 +98,7 @@ class BehaviourProfile:
     overdue_tasks: int = 0
     upcoming_deadlines_7d: int = 0
     last_task_on_time: bool | None = None
+    usual_days_early: float | None = None  # how early tasks are usually finished (negative = late)
 
 
 def features_from_app(
@@ -97,7 +110,7 @@ def features_from_app(
     n = max(0, profile.tasks_done_before) if rate is not None else 0  # no history yet
     active7 = max(0, min(7, profile.active_days_7))
     f = {
-        "H": float(min(max(days_to_deadline, 0.0), 14.0)),
+        "H": effective_horizon(days_to_deadline, estimated_minutes),
         # App tasks are things the user committed to, like OULAD's tutor-marked assignments. OULAD's computer-marked
         # quizzes follow a course-specific bulk-submission pattern that does not carry over, so it is not used.
         "is_tma": 1,
@@ -124,7 +137,10 @@ def features_from_app(
     f["clicks_14"] = f["active_14"] * 8.0
     f["clicks_3"] = min(3, active7) * 8.0 if profile.days_since_active < 3 else 0.0
     f["clicks_30"] = active7 * 30 / 7 * 8.0
-    if rate is not None:  # people who are usually on time also hand in a few days early (OULAD: about +4 days)
+    if profile.usual_days_early is not None:  # measured from the task log
+        f["prior_mean_days_early"] = float(profile.usual_days_early)
+        f["last_prior_days_early"] = float(profile.usual_days_early)
+    elif rate is not None:  # people who are usually on time also hand in a few days early (OULAD: about +4 days)
         f["prior_mean_days_early"] = round((rate - 0.5) * 8, 2)
         f["last_prior_days_early"] = f["prior_mean_days_early"]
     return f
