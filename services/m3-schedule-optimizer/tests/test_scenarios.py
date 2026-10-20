@@ -192,3 +192,47 @@ def test_click_a_session_marks_it_missed():
     assert j["replan"]["missed_slot"]["start"][:16] == clicked["start"][:16]
     new = by_title(j)["Watch a movie"]
     assert new["unscheduled"] or new["sessions"][0]["start"] >= clicked["end"]
+
+
+M2_SAMPLE = {  # exactly what Module 2 sends
+    "user_id": "80655b09-b636-4a84-8cea-7571591d0c4c",
+    "generated_at": "2026-10-21T07:00:00+05:30",
+    "slot_minutes": 60,
+    "sleep_hours_last_night": 6.5,
+    "slots": [
+        {"start": "2026-10-21T07:00:00+05:30", "end": "2026-10-21T08:00:00+05:30",
+         "energy": 0.62, "focus": 0.58, "mental_fatigue": 0.30, "burnout_risk": 0.20},
+        {"start": "2026-10-21T08:00:00+05:30", "end": "2026-10-21T09:00:00+05:30",
+         "energy": 0.78, "focus": 0.74, "mental_fatigue": 0.25, "burnout_risk": 0.20},
+    ],
+    "model": {"name": "m2-wellness", "version": "1.0"},
+}  # fmt: skip
+
+
+def test_manual_module2_input_and_busy_hours():
+    p = plan(S2, manual={"wellness": M2_SAMPLE, "busy": ["10:00-12:00"], "deadline_effect": False})
+    w = p["wellness"]
+    assert w["manual"] and "Manual Module 2 input" in w["source"] and "StudentLife" not in w["source"]
+    at8 = [s for s in w["hourly"] if s["start"][11:13] == "08"]
+    assert at8 and all(s["energy"] == 0.78 and s["focus"] == 0.74 for s in at8)  # same time of day on every day
+    assert all(s["energy"] == 0.5 for s in w["hourly"] if s["start"][11:13] == "15")  # not given -> neutral
+    assert all(b["label"] == "busy (manual)" and b["start"][11:16] == "10:00" for b in p["busy"])
+    for t in p["tasks"]:
+        for s in t["sessions"]:
+            assert not ("10:00" <= s["start"][11:16] < "12:00")  # nothing inside the manual busy block
+    p2 = plan(S2, manual={"wellness": M2_SAMPLE, "deadline_effect": True})
+    assert "StudentLife" in p2["wellness"]["source"]
+    assert min(s["energy"] for s in p2["wellness"]["hourly"] if s["start"][11:13] == "08") < 0.78
+    r = client.post("/v1/demo/plan", json={**BASE, "tasks": S1, "manual": {"busy": ["nine to five"]}})
+    assert r.status_code == 422
+
+
+def test_prepared_data_preview():
+    r = client.get("/v1/demo/prepared")
+    if r.status_code == 503:
+        pytest.skip("models/prepared_preview.json not built")
+    names = [d["name"].split(" ")[0] for d in r.json()["datasets"]]
+    assert names == ["OULAD", "MS-LaTTE", "PMData", "ATUS", "StudentLife"]
+    for d in r.json()["datasets"]:
+        assert d["steps"] and d["stats"] and d["sample"]["rows"]
+        assert all(len(row) == len(d["sample"]["columns"]) for row in d["sample"]["rows"])

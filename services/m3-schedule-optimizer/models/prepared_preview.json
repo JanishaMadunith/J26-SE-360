@@ -1,0 +1,1298 @@
+{
+ "datasets": [
+  {
+   "name": "OULAD → task-completion cases",
+   "used_for": "Completion model (will this task be done on time?)",
+   "raw": "Open University Learning Analytics Dataset: 7 tables (students, courses, assessments, submissions, 10.6 M daily click records) for 32,593 students in 22 course runs",
+   "steps": [
+    "Each assessment with a deadline becomes a task",
+    "Asked at 14, 7, 3 and 1 day(s) before the deadline (t = deadline − H)",
+    "Only data up to day t is used (clicks, earlier submissions) — no peeking into the future",
+    "Tasks already handed in by day t are dropped (nothing left to predict)",
+    "65 features: past on-time rate, recent activity, backlog, overdue work, other deadlines, task size",
+    "Label y = 1 if submitted on or before the deadline, else 0 (late, never, or withdrew)"
+   ],
+   "stats": {
+    "prepared rows (cases)": 663420,
+    "features per case": 65,
+    "students": 25963,
+    "on time (y = 1)": "39.2%",
+    "rows 2013B (train)": 143848,
+    "rows 2013J (train)": 179840,
+    "rows 2014B (validation, then final training)": 161608,
+    "rows 2014J (test)": 178124
+   },
+   "per_horizon": {
+    "14 day(s) before": {
+     "rows": 189295,
+     "on time": 0.458
+    },
+    "7 day(s) before": {
+     "rows": 179663,
+     "on time": 0.438
+    },
+    "3 day(s) before": {
+     "rows": 165699,
+     "on time": 0.396
+    },
+    "1 day(s) before": {
+     "rows": 128763,
+     "on time": 0.228
+    }
+   },
+   "sample": {
+    "columns": [
+     "code_module",
+     "code_presentation",
+     "id_student",
+     "id_assessment",
+     "assessment_type",
+     "H",
+     "weight",
+     "prior_on_time_rate",
+     "n_prior",
+     "days_since_last",
+     "active_7",
+     "clicks_7",
+     "n_prior_outstanding",
+     "n_overdue_all",
+     "n_upcoming_7_all",
+     "y"
+    ],
+    "rows": [
+     [
+      "BBB",
+      "2013J",
+      335481,
+      14996,
+      "TMA",
+      14,
+      5.0,
+      null,
+      0.0,
+      4.0,
+      1.0,
+      5.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "FFF",
+      "2013J",
+      609416,
+      34884,
+      "CMA",
+      14,
+      0.0,
+      0.8,
+      5.0,
+      3.0,
+      2.0,
+      156.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "CCC",
+      "2014J",
+      418397,
+      24297,
+      "CMA",
+      14,
+      8.0,
+      0.5,
+      4.0,
+      1.0,
+      4.0,
+      57.0,
+      0.0,
+      0.0,
+      0.0,
+      "0 late / missing"
+     ],
+     [
+      "FFF",
+      "2014J",
+      87264,
+      34903,
+      "TMA",
+      7,
+      25.0,
+      0.75,
+      4.0,
+      0.0,
+      4.0,
+      120.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "DDD",
+      "2013J",
+      581138,
+      25352,
+      "TMA",
+      7,
+      20.0,
+      1.0,
+      4.0,
+      0.0,
+      2.0,
+      65.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "EEE",
+      "2013J",
+      164968,
+      30711,
+      "TMA",
+      7,
+      28.0,
+      1.0,
+      2.0,
+      9.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      "0 late / missing"
+     ],
+     [
+      "BBB",
+      "2014B",
+      628423,
+      15012,
+      "TMA",
+      3,
+      18.0,
+      0.429,
+      7.0,
+      4.0,
+      2.0,
+      44.0,
+      0.0,
+      0.0,
+      1.0,
+      "1 on time"
+     ],
+     [
+      "BBB",
+      "2013J",
+      233317,
+      14999,
+      "TMA",
+      3,
+      18.0,
+      0.6,
+      5.0,
+      1.0,
+      2.0,
+      38.0,
+      0.0,
+      0.0,
+      1.0,
+      "1 on time"
+     ],
+     [
+      "GGG",
+      "2014B",
+      629961,
+      37428,
+      "CMA",
+      3,
+      0.0,
+      0.667,
+      3.0,
+      58.0,
+      0.0,
+      0.0,
+      1.0,
+      1.0,
+      5.0,
+      "0 late / missing"
+     ],
+     [
+      "FFF",
+      "2013B",
+      539514,
+      34862,
+      "TMA",
+      1,
+      25.0,
+      1.0,
+      2.0,
+      0.0,
+      5.0,
+      56.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "FFF",
+      "2013J",
+      105629,
+      34873,
+      "TMA",
+      1,
+      12.5,
+      null,
+      0.0,
+      0.0,
+      4.0,
+      111.0,
+      0.0,
+      0.0,
+      0.0,
+      "1 on time"
+     ],
+     [
+      "FFF",
+      "2013J",
+      443753,
+      34873,
+      "TMA",
+      1,
+      12.5,
+      null,
+      0.0,
+      null,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      "0 late / missing"
+     ]
+    ]
+   },
+   "one_row_all_features": {
+    "H": 14,
+    "is_tma": 1,
+    "weight": 5.0,
+    "deadline": 19.0,
+    "deadline_frac": 0.071,
+    "a_order": 1,
+    "n_assess": 11,
+    "gap_prev": 19.0,
+    "gap_next": 28.0,
+    "module_length": 268,
+    "season_j": 1,
+    "code_module": "BBB",
+    "num_of_prev_attempts": 3,
+    "studied_credits": 60,
+    "date_registration": -32.0,
+    "n_concurrent_modules": 1,
+    "n_prior": 0.0,
+    "n_prior_on_time": 0.0,
+    "prior_on_time_rate": null,
+    "n_prior_late_known": 0.0,
+    "n_prior_outstanding": 0.0,
+    "prior_mean_days_early": null,
+    "last_prior_on_time": null,
+    "n_future_done": 0.0,
+    "n_upcoming_14_all": 0.0,
+    "n_upcoming_7_all": 0.0,
+    "n_overdue_all": 0.0,
+    "clicks_total": 5.0,
+    "active_days_total": 1.0,
+    "clicks_pre_start": 0.0,
+    "clicks_3": 0.0,
+    "clicks_7": 5.0,
+    "clicks_14": 5.0,
+    "clicks_30": 5.0,
+    "active_7": 1.0,
+    "active_14": 1.0,
+    "days_since_last": 4.0,
+    "trend_7": 6.0,
+    "clicks_since_prev_deadline": 5.0,
+    "active_since_prev_deadline": 1.0,
+    "rel_clicks_7": 0.294,
+    "pct_clicks_7": 0.374,
+    "pct_clicks_total": 0.243,
+    "pct_clicks_14": 0.273,
+    "homepage_14": 5.0,
+    "oucontent_14": 0.0,
+    "forumng_14": 0.0,
+    "subpage_14": 0.0,
+    "resource_14": 0.0,
+    "url_14": 0.0,
+    "quiz_14": 0.0,
+    "homepage_total": 5.0,
+    "oucontent_total": 0.0,
+    "forumng_total": 0.0,
+    "subpage_total": 0.0,
+    "resource_total": 0.0,
+    "url_total": 0.0,
+    "quiz_total": 0.0,
+    "prior_same_type_on_time_rate": null,
+    "n_prior_same_type": 0.0,
+    "last_prior_days_early": null,
+    "self_rel_clicks_7": 6.0,
+    "site_visits_14": 1.0,
+    "site_visits_7": 1.0,
+    "days_since_registration": 37.0
+   }
+  },
+  {
+   "name": "MS-LaTTE → labelled to-do titles",
+   "used_for": "Time-of-day model (best part of the day for a task)",
+   "raw": "Microsoft to-do titles (10,101), each judged by 5 annotators: when would people do this (weekday/weekend × morning/afternoon/evening/night/anytime)",
+   "steps": [
+    "Votes pooled per part of day (weekday + weekend); 'anytime' spread evenly over the four parts",
+    "Label = the part of day with most votes; vote shares kept for top-2 and agreement scores",
+    "Model input = lower-case title + the list it is in (in the app: the task category)",
+    "Same 80/20 test split for every model version; 5-fold cross-validation"
+   ],
+   "stats": {
+    "prepared rows (tasks)": 10101,
+    "label morning": 1851,
+    "label afternoon": 3830,
+    "label evening": 4204,
+    "label night": 216
+   },
+   "sample": {
+    "columns": [
+     "task title",
+     "list",
+     "morning votes",
+     "afternoon votes",
+     "evening votes",
+     "night votes",
+     "label (most votes)",
+     "model input"
+    ],
+    "rows": [
+     [
+      "buy paintings",
+      "default list",
+      0.0,
+      6.0,
+      6.0,
+      0.0,
+      "afternoon (tie)",
+      "buy paintings || list: default list"
+     ],
+     [
+      "finish and order business cards",
+      "work",
+      2.0,
+      4.0,
+      2.0,
+      0.0,
+      "afternoon",
+      "finish and order business cards || list: work"
+     ],
+     [
+      "call about bc",
+      "to do list",
+      4.5,
+      2.5,
+      3.5,
+      0.5,
+      "morning",
+      "call about bc || list: to do list"
+     ],
+     [
+      "buy fire ladder",
+      "default list",
+      0.5,
+      2.5,
+      8.5,
+      0.5,
+      "evening",
+      "buy fire ladder || list: default list"
+     ],
+     [
+      "fix adobe payment",
+      "default list",
+      3.0,
+      3.0,
+      5.0,
+      0.0,
+      "evening",
+      "fix adobe payment || list: default list"
+     ],
+     [
+      "cards printing",
+      "work",
+      0.0,
+      4.0,
+      6.0,
+      0.0,
+      "evening",
+      "cards printing || list: work"
+     ],
+     [
+      "xmas returns",
+      "to do list",
+      2.0,
+      0.0,
+      8.0,
+      1.0,
+      "evening",
+      "xmas returns || list: to do list"
+     ],
+     [
+      "drop clothes at salvation army",
+      "default list",
+      1.0,
+      4.0,
+      5.0,
+      0.0,
+      "evening",
+      "drop clothes at salvation army || list: default list"
+     ],
+     [
+      "schedule hand therapy",
+      "default list",
+      3.0,
+      5.0,
+      1.0,
+      0.0,
+      "afternoon",
+      "schedule hand therapy || list: default list"
+     ],
+     [
+      "send status report",
+      "to do",
+      3.0,
+      2.0,
+      4.0,
+      0.0,
+      "evening",
+      "send status report || list: to do"
+     ],
+     [
+      "sign up for extra class",
+      "to do",
+      4.0,
+      4.0,
+      4.0,
+      0.0,
+      "morning (tie)",
+      "sign up for extra class || list: to do"
+     ],
+     [
+      "read for 83 minutes",
+      "default list",
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      "morning (tie)",
+      "read for 83 minutes || list: default list"
+     ],
+     [
+      "fix lotus notes",
+      "default list",
+      1.0,
+      4.0,
+      4.0,
+      1.0,
+      "afternoon (tie)",
+      "fix lotus notes || list: default list"
+     ],
+     [
+      "quickset",
+      "bunnings",
+      3.0,
+      3.0,
+      1.0,
+      0.0,
+      "morning (tie)",
+      "quickset || list: bunnings"
+     ]
+    ]
+   }
+  },
+  {
+   "name": "PMData → daily wellness → hourly forecast",
+   "used_for": "Stand-in for Module 2's wellness forecast (energy, focus, fatigue, burnout per hour)",
+   "raw": "PMData (Thambawita et al., 2020): 16 people, 5 months of Fitbit + daily self-reports (readiness, fatigue, mood, stress, sleep)",
+   "steps": [
+    "One row per person-day with the self-report scores and Fitbit sleep",
+    "energy = mean of readiness, fatigue and sleep quality; focus = mean of readiness, mood and stress; calm = stress (pmsys 1–5 scales, where higher = better, mapped to 0–1)",
+    "Each day is spread over the hours with a standard alertness curve (high mid-morning, dip after lunch)",
+    "Output has exactly Module 2's WellnessForecast format, so the real Module 2 can replace it"
+   ],
+   "stats": {
+    "prepared rows (person-days)": 1724,
+    "people": 16,
+    "mean energy": 0.481,
+    "mean focus": 0.513
+   },
+   "sample": {
+    "columns": [
+     "participant",
+     "date",
+     "readiness",
+     "fatigue",
+     "mood",
+     "stress",
+     "sleep_quality",
+     "sleep_duration_h",
+     "energy",
+     "focus",
+     "calm"
+    ],
+    "rows": [
+     [
+      "p02",
+      "2019-11-17",
+      4.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      7.0,
+      0.467,
+      0.467,
+      0.5
+     ],
+     [
+      "p02",
+      "2019-11-23",
+      5.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      6.0,
+      0.5,
+      0.5,
+      0.5
+     ],
+     [
+      "p02",
+      "2019-12-05",
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      6.0,
+      0.433,
+      0.433,
+      0.5
+     ],
+     [
+      "p04",
+      "2019-12-05",
+      6.0,
+      3.0,
+      3.0,
+      2.0,
+      4.0,
+      7.0,
+      0.617,
+      0.45,
+      0.25
+     ],
+     [
+      "p07",
+      "2019-11-13",
+      4.0,
+      2.0,
+      3.0,
+      2.0,
+      3.0,
+      7.0,
+      0.383,
+      0.383,
+      0.25
+     ],
+     [
+      "p07",
+      "2019-11-23",
+      5.0,
+      3.0,
+      3.0,
+      4.0,
+      4.0,
+      8.0,
+      0.583,
+      0.583,
+      0.75
+     ],
+     [
+      "p08",
+      "2019-12-25",
+      2.0,
+      3.0,
+      2.0,
+      5.0,
+      4.0,
+      8.0,
+      0.483,
+      0.483,
+      1.0
+     ],
+     [
+      "p10",
+      "2020-01-07",
+      2.0,
+      1.0,
+      3.0,
+      2.0,
+      2.0,
+      6.0,
+      0.15,
+      0.317,
+      0.25
+     ],
+     [
+      "p11",
+      "2019-12-17",
+      6.0,
+      3.0,
+      3.0,
+      3.0,
+      3.0,
+      6.0,
+      0.533,
+      0.533,
+      0.5
+     ],
+     [
+      "p12",
+      "2020-01-24",
+      2.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0,
+      6.0,
+      0.233,
+      0.4,
+      0.5
+     ],
+     [
+      "p14",
+      "2020-01-10",
+      7.0,
+      3.0,
+      3.0,
+      3.0,
+      4.0,
+      8.0,
+      0.65,
+      0.567,
+      0.5
+     ],
+     [
+      "p16",
+      "2020-01-07",
+      3.0,
+      2.0,
+      3.0,
+      3.0,
+      2.0,
+      5.0,
+      0.267,
+      0.433,
+      0.5
+     ]
+    ]
+   },
+   "example_day": {
+    "participant": "p07",
+    "date": "2020-03-22",
+    "hourly": {
+     "columns": [
+      "hour",
+      "energy",
+      "focus",
+      "mental_fatigue",
+      "burnout_risk"
+     ],
+     "rows": [
+      [
+       "06:00",
+       0.29,
+       0.29,
+       0.71,
+       0.54
+      ],
+      [
+       "07:00",
+       0.36,
+       0.36,
+       0.64,
+       0.54
+      ],
+      [
+       "08:00",
+       0.413,
+       0.413,
+       0.587,
+       0.54
+      ],
+      [
+       "09:00",
+       0.458,
+       0.458,
+       0.542,
+       0.54
+      ],
+      [
+       "10:00",
+       0.483,
+       0.483,
+       0.517,
+       0.54
+      ],
+      [
+       "11:00",
+       0.49,
+       0.49,
+       0.51,
+       0.54
+      ],
+      [
+       "12:00",
+       0.465,
+       0.465,
+       0.535,
+       0.54
+      ],
+      [
+       "13:00",
+       0.423,
+       0.423,
+       0.577,
+       0.54
+      ],
+      [
+       "14:00",
+       0.409,
+       0.409,
+       0.591,
+       0.54
+      ],
+      [
+       "15:00",
+       0.43,
+       0.43,
+       0.57,
+       0.54
+      ],
+      [
+       "16:00",
+       0.458,
+       0.458,
+       0.542,
+       0.54
+      ],
+      [
+       "17:00",
+       0.465,
+       0.465,
+       0.535,
+       0.54
+      ],
+      [
+       "18:00",
+       0.448,
+       0.448,
+       0.552,
+       0.54
+      ],
+      [
+       "19:00",
+       0.413,
+       0.413,
+       0.587,
+       0.54
+      ],
+      [
+       "20:00",
+       0.378,
+       0.378,
+       0.622,
+       0.54
+      ],
+      [
+       "21:00",
+       0.325,
+       0.325,
+       0.675,
+       0.54
+      ],
+      [
+       "22:00",
+       0.273,
+       0.273,
+       0.727,
+       0.54
+      ],
+      [
+       "23:00",
+       0.227,
+       0.227,
+       0.773,
+       0.54
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "ATUS 2025 → typical busy hours",
+   "used_for": "Default work / class hours per persona (until the user's own calendar is connected)",
+   "raw": "American Time Use Survey 2025: what each respondent did, minute by minute, for one day",
+   "steps": [
+    "Weekday, non-holiday diaries; working adults and university students",
+    "Survey-weighted share of people at work, in class or travelling, per 15 minutes",
+    "A quarter-hour is a default busy block when at least 40% of that group is at work / class / travel"
+   ],
+   "stats": {
+    "diaries working adult": 1519,
+    "diaries university student": 119,
+    "busy blocks working adult": "07:30–17:15",
+    "busy blocks university student": "09:00–15:30, 16:00–16:30"
+   },
+   "sample": {
+    "columns": [
+     "persona",
+     "hour",
+     "work",
+     "class",
+     "travel",
+     "sleep",
+     "busy share",
+     "blocked?"
+    ],
+    "rows": [
+     [
+      "working adult",
+      "06:00",
+      0.14,
+      0.0,
+      0.05,
+      0.59,
+      0.19,
+      ""
+     ],
+     [
+      "working adult",
+      "07:00",
+      0.31,
+      0.0,
+      0.09,
+      0.34,
+      0.4,
+      "yes"
+     ],
+     [
+      "working adult",
+      "08:00",
+      0.53,
+      0.0,
+      0.07,
+      0.2,
+      0.6,
+      "yes"
+     ],
+     [
+      "working adult",
+      "09:00",
+      0.65,
+      0.0,
+      0.04,
+      0.11,
+      0.69,
+      "yes"
+     ],
+     [
+      "working adult",
+      "10:00",
+      0.68,
+      0.0,
+      0.03,
+      0.07,
+      0.71,
+      "yes"
+     ],
+     [
+      "working adult",
+      "11:00",
+      0.65,
+      0.0,
+      0.03,
+      0.04,
+      0.68,
+      "yes"
+     ],
+     [
+      "working adult",
+      "12:00",
+      0.56,
+      0.0,
+      0.04,
+      0.03,
+      0.6,
+      "yes"
+     ],
+     [
+      "working adult",
+      "13:00",
+      0.67,
+      0.0,
+      0.04,
+      0.03,
+      0.71,
+      "yes"
+     ],
+     [
+      "working adult",
+      "14:00",
+      0.66,
+      0.0,
+      0.05,
+      0.04,
+      0.71,
+      "yes"
+     ],
+     [
+      "working adult",
+      "15:00",
+      0.57,
+      0.0,
+      0.09,
+      0.04,
+      0.66,
+      "yes"
+     ],
+     [
+      "working adult",
+      "16:00",
+      0.42,
+      0.0,
+      0.11,
+      0.04,
+      0.53,
+      "yes"
+     ],
+     [
+      "working adult",
+      "17:00",
+      0.23,
+      0.0,
+      0.12,
+      0.03,
+      0.35,
+      ""
+     ],
+     [
+      "working adult",
+      "18:00",
+      0.13,
+      0.0,
+      0.08,
+      0.02,
+      0.21,
+      ""
+     ],
+     [
+      "working adult",
+      "19:00",
+      0.11,
+      0.0,
+      0.04,
+      0.05,
+      0.15,
+      ""
+     ],
+     [
+      "working adult",
+      "20:00",
+      0.09,
+      0.0,
+      0.03,
+      0.12,
+      0.12,
+      ""
+     ],
+     [
+      "working adult",
+      "21:00",
+      0.08,
+      0.0,
+      0.02,
+      0.32,
+      0.1,
+      ""
+     ],
+     [
+      "working adult",
+      "22:00",
+      0.06,
+      0.0,
+      0.02,
+      0.61,
+      0.08,
+      ""
+     ],
+     [
+      "working adult",
+      "23:00",
+      0.04,
+      0.0,
+      0.01,
+      0.81,
+      0.05,
+      ""
+     ],
+     [
+      "university student",
+      "06:00",
+      0.02,
+      0.02,
+      0.01,
+      0.87,
+      0.05,
+      ""
+     ],
+     [
+      "university student",
+      "07:00",
+      0.07,
+      0.06,
+      0.02,
+      0.71,
+      0.15,
+      ""
+     ],
+     [
+      "university student",
+      "08:00",
+      0.13,
+      0.14,
+      0.03,
+      0.49,
+      0.3,
+      ""
+     ],
+     [
+      "university student",
+      "09:00",
+      0.18,
+      0.26,
+      0.06,
+      0.2,
+      0.5,
+      "yes"
+     ],
+     [
+      "university student",
+      "10:00",
+      0.19,
+      0.31,
+      0.06,
+      0.09,
+      0.56,
+      "yes"
+     ],
+     [
+      "university student",
+      "11:00",
+      0.22,
+      0.33,
+      0.08,
+      0.07,
+      0.63,
+      "yes"
+     ],
+     [
+      "university student",
+      "12:00",
+      0.2,
+      0.3,
+      0.06,
+      0.02,
+      0.56,
+      "yes"
+     ],
+     [
+      "university student",
+      "13:00",
+      0.24,
+      0.29,
+      0.02,
+      0.04,
+      0.55,
+      "yes"
+     ],
+     [
+      "university student",
+      "14:00",
+      0.24,
+      0.22,
+      0.04,
+      0.01,
+      0.5,
+      "yes"
+     ],
+     [
+      "university student",
+      "15:00",
+      0.2,
+      0.14,
+      0.08,
+      0.02,
+      0.42,
+      "yes"
+     ],
+     [
+      "university student",
+      "16:00",
+      0.14,
+      0.15,
+      0.11,
+      0.01,
+      0.4,
+      "yes"
+     ],
+     [
+      "university student",
+      "17:00",
+      0.12,
+      0.09,
+      0.13,
+      0.01,
+      0.34,
+      ""
+     ],
+     [
+      "university student",
+      "18:00",
+      0.1,
+      0.12,
+      0.12,
+      0.02,
+      0.34,
+      ""
+     ],
+     [
+      "university student",
+      "19:00",
+      0.09,
+      0.13,
+      0.07,
+      0.02,
+      0.29,
+      ""
+     ],
+     [
+      "university student",
+      "20:00",
+      0.07,
+      0.15,
+      0.06,
+      0.08,
+      0.28,
+      ""
+     ],
+     [
+      "university student",
+      "21:00",
+      0.05,
+      0.13,
+      0.05,
+      0.21,
+      0.23,
+      ""
+     ],
+     [
+      "university student",
+      "22:00",
+      0.02,
+      0.09,
+      0.06,
+      0.43,
+      0.17,
+      ""
+     ],
+     [
+      "university student",
+      "23:00",
+      0.02,
+      0.05,
+      0.01,
+      0.69,
+      0.08,
+      ""
+     ]
+    ]
+   }
+  },
+  {
+   "name": "StudentLife → deadline effect on stress and sleep",
+   "used_for": "Lowers the wellness forecast when deadlines pile up",
+   "raw": "StudentLife (Wang et al., UbiComp 2014): 48 Dartmouth students, 10 weeks of phone sensing, stress and sleep surveys, and their real deadlines",
+   "steps": [
+    "One row per student-day: stress report, sleep, number of deadlines in the next 3 days",
+    "Within-student comparison (each student against their own average), so personalities cancel out",
+    "Slope per extra deadline used by the scheduler"
+   ],
+   "stats": {
+    "students": 44,
+    "student-days": 1449,
+    "stress per extra deadline": "+0.18",
+    "sleep per extra deadline": "-0.25 h"
+   },
+   "sample": {
+    "columns": [
+     "deadlines in next 3 days",
+     "mean stress (1–5)",
+     "student-days (stress)",
+     "mean sleep (h)",
+     "student-days (sleep)"
+    ],
+    "rows": [
+     [
+      "0",
+      3.049,
+      514,
+      6.276,
+      509
+     ],
+     [
+      "1",
+      3.146,
+      326,
+      6.142,
+      327
+     ],
+     [
+      "2",
+      3.433,
+      187,
+      5.865,
+      181
+     ],
+     [
+      "3+",
+      3.023,
+      101,
+      5.538,
+      82
+     ]
+    ]
+   }
+  }
+ ]
+}

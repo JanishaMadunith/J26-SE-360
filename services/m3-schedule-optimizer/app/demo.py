@@ -19,10 +19,10 @@ from typing import Literal
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from m3.completion_model import APP_FIXED, BehaviourProfile, features_from_app
-from m3.context_datasets import apply_deadline_load, forecast_from_days
+from m3.context_datasets import SLEEP_H_PER_DEADLINE, STRESS_PER_DEADLINE, apply_deadline_load, forecast_from_days
 from m3.scheduling.heuristic import build_grid
 from m3.tasktime import PARTS, predict_parts
 from wellness_contracts import ScheduleRequest, TaskCategory
@@ -88,6 +88,47 @@ class PlanTask(BaseModel):
     )
 
 
+class ManualSlot(BaseModel):
+    start: datetime
+    end: datetime | None = None
+    energy: float = Field(ge=0, le=1)
+    focus: float = Field(ge=0, le=1)
+    mental_fatigue: float = Field(0.3, ge=0, le=1)
+    burnout_risk: float = Field(0.2, ge=0, le=1)
+
+
+class ManualForecast(BaseModel):
+    """What Module 2 sends (WellnessForecast). user_id, generated_at and model may be left out here."""
+
+    slot_minutes: int = Field(60, ge=15, le=240)
+    slots: list[ManualSlot] = Field(min_length=1, max_length=24 * 6 * 4)
+    sleep_hours_last_night: float | None = Field(None, ge=0, le=16)
+
+
+class ManualInput(BaseModel):
+    """Manual mode of the demo: type Module 2's forecast and the busy hours yourself instead of PMData / ATUS."""
+
+    wellness: ManualForecast | None = Field(None, description="A Module 2 WellnessForecast; null = PMData stand-in")
+    busy: list[str] | None = Field(
+        None,
+        description="Busy hours every planned day, e.g. ['09:00-15:30']; null = the ATUS persona",
+    )
+    deadline_effect: bool = Field(
+        False,
+        description="Also lower wellness for deadlines (StudentLife); off when Module 2 already includes workload",
+    )
+
+    @field_validator("busy")
+    @classmethod
+    def _check_busy(cls, v):
+        import re
+
+        for b in v or []:
+            if not re.fullmatch(r"\s*\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}\s*", b):
+                raise ValueError(f"busy block '{b}' must look like 09:00-15:30")
+        return v
+
+
 class PlanRequest(BaseModel):
     persona: Literal["working_adult", "university_student", "free"] = "university_student"
     wellness_day: Literal["good", "typical", "hard"] = "typical"
@@ -95,6 +136,7 @@ class PlanRequest(BaseModel):
     tasks: list[PlanTask] = Field(default=[], max_length=15)
     days: int = Field(3, ge=1, le=5)
     day_end_hour: int = Field(23, ge=18, le=24, description="Latest hour for flexible tasks")
+    manual: ManualInput | None = Field(None, description="Manual mode: your own Module 2 forecast and busy hours")
 
 
 class Session(BaseModel):
@@ -108,7 +150,8 @@ class Change(BaseModel):
     kind: Literal["missed", "add"]
     task_key: str | None = Field(None, description="missed: the task that was not done (its first session passed)")
     session_start: datetime | None = Field(
-        None, description="missed: which of the task's sessions was missed (clicked on the timeline); default: the first"
+        None,
+        description="missed: which of the task's sessions was missed (clicked on the timeline); default: the first",
     )
     new_task: PlanTask | None = Field(None, description="add: the new (urgent) task")
 
@@ -177,8 +220,17 @@ def router(pred: Predictor) -> APIRouter:
             "personas": {k: v["default_busy_blocks"] for k, v in atus["personas"].items()},
             "pmdata_days": len(pm),
             "pmdata_participants": len({d["participant"] for d in pm}),
+            "plan_start": day_one().isoformat(),
             "models": pred.status(),
         }
+
+    @r.get("/v1/demo/prepared")
+    def prepared() -> dict:
+        """Preview of the prepared (model-ready) data built from each dataset (models/prepared_preview.json)."""
+        pv = _json(str(md / "prepared_preview.json"))
+        if pv is None:
+            raise HTTPException(503, "models/prepared_preview.json missing - run: python -m m3.build_prepared_preview")
+        return pv
 
     def wellness_days(kind: str, n: int) -> list[dict]:
         pm = _json(str(md / "pmdata_wellness_days.json"))
@@ -214,6 +266,82 @@ def router(pred: Predictor) -> APIRouter:
                 busy.append({"start": s0.isoformat(), "end": e0.isoformat(), "label": "work/class (ATUS)"})
         return busy
 
+    def manual_busy(blocks: list[str], start: datetime, n_days: int) -> list[dict]:
+        busy = []
+        for d in range(n_days):
+            day = start + timedelta(days=d)
+            for blk in blocks:
+                a, b = (x.strip() for x in blk.split("-"))
+                s0 = day.replace(hour=int(a.split(":")[0]), minute=int(a.split(":")[1]))
+                e0 = day.replace(hour=min(23, int(b.split(":")[0])), minute=int(b.split(":")[1]))
+                if b.startswith("24") or b == "00:00":
+                    e0 = day.replace(hour=23, minute=59)
+                if e0 > s0:
+                    busy.append({"start": s0.isoformat(), "end": e0.isoformat(), "label": "busy (manual)"})
+        return busy
+
+    def manual_forecast(mf: ManualForecast, uid: str, start: datetime, hours: int, loads: list[int]) -> dict:
+        """Module 2's forecast as typed or pasted: each planned hour takes the slot that covers it; if the dates do
+        not match the plan, the slot with the same time of day; hours not given are neutral. With deadline_effect,
+        the StudentLife effects are applied on top (as for the PMData stand-in)."""
+        step = timedelta(minutes=mf.slot_minutes)
+        spans = [(s.start, s.end or s.start + step, s) for s in mf.slots]
+
+        def tod(t: datetime) -> int:
+            t = t.astimezone(TZ)
+            return t.hour * 60 + t.minute
+
+        def find(t: datetime):
+            for a, b, s in spans:
+                if a <= t < b:
+                    return s
+            m = tod(t)
+            for a, b, s in spans:
+                lo, ln = tod(a), int((b - a).total_seconds() // 60)
+                if 0 <= (m - lo) % 1440 < ln:
+                    return s
+            return None
+
+        slots = []
+        start = start.replace(minute=0, second=0, microsecond=0)
+        for h in range(hours):
+            t = start + timedelta(hours=h)
+            s = find(t)
+            v = (
+                {
+                    "energy": s.energy,
+                    "focus": s.focus,
+                    "mental_fatigue": s.mental_fatigue,
+                    "burnout_risk": s.burnout_risk,
+                }
+                if s
+                else {"energy": 0.5, "focus": 0.5, "mental_fatigue": 0.3, "burnout_risk": 0.2}
+            )
+            load = loads[min(len(loads) - 1, (t.date() - start.date()).days)] if loads else 0
+            if load:
+                stress, sleep = STRESS_PER_DEADLINE * load / 4, -SLEEP_H_PER_DEADLINE * load / 7
+                v = {
+                    "energy": max(0.05, v["energy"] - sleep),
+                    "focus": max(0.05, v["focus"] - stress),
+                    "mental_fatigue": min(1.0, v["mental_fatigue"] + sleep),
+                    "burnout_risk": min(1.0, v["burnout_risk"] + stress),
+                }
+            slots.append(
+                {
+                    "start": t.isoformat(),
+                    "end": (t + timedelta(hours=1)).isoformat(),
+                    **{k: round(x, 3) for k, x in v.items()},
+                }
+            )
+        return {
+            "user_id": uid,
+            "generated_at": start.isoformat(),
+            "slot_minutes": 60,
+            "slots": slots,
+            "sleep_hours_last_night": mf.sleep_hours_last_night,
+            "model": {"name": "m2-manual-demo", "version": "1.0"},
+        }
+
     def key_id(key: str) -> uuid.UUID:
         return uuid.uuid5(uuid.NAMESPACE_URL, f"m3-demo/{key}")
 
@@ -232,7 +360,12 @@ def router(pred: Predictor) -> APIRouter:
         keys = keys or [f"t{i}" for i in range(len(req.tasks))]
         locked = locked or []
         locked_keys = {s.task_key for s in locked}
-        busy = busy_blocks(req.persona, start, req.days)
+        man = req.manual or ManualInput()
+        busy = (
+            manual_busy(man.busy, start, req.days)
+            if man.busy is not None
+            else busy_blocks(req.persona, start, req.days)
+        )
         days = wellness_days(req.wellness_day, req.days + 1)
         # StudentLife: each deadline in the next 3 days raises stress and cuts sleep -> lower that day's wellness
         dls = [deadline_of(t, start) for t in req.tasks]
@@ -240,8 +373,17 @@ def router(pred: Predictor) -> APIRouter:
         for i in range(len(days)):
             d0 = start.replace(hour=0) + timedelta(days=i)
             loads.append(sum(1 for dl in dls if dl is not None and d0 <= dl < d0 + timedelta(days=3)))
+        manual_w = man.wellness is not None
+        use_load = man.deadline_effect if manual_w else True  # manual Module 2 input: StudentLife only if ticked
+        if not use_load:
+            loads = [0] * len(loads)
         days = [apply_deadline_load(d, n) for d, n in zip(days, loads, strict=True)]
         uid = str(uuid.uuid4())
+        wellness = (
+            manual_forecast(man.wellness, uid, start, 24 * req.days, loads)
+            if manual_w
+            else forecast_from_days(days, uid, start, hours=24 * req.days)
+        )
         tasks = []
         for k, t in zip(keys, req.tasks, strict=True):
             base = {
@@ -287,7 +429,7 @@ def router(pred: Predictor) -> APIRouter:
                 "day_end_hour": req.day_end_hour,
                 "tasks": tasks,
                 "busy": busy,
-                "wellness": forecast_from_days(days, uid, start, hours=24 * req.days),
+                "wellness": wellness,
             }
         )
         prof = req.profile.to_profile()
@@ -352,10 +494,23 @@ def router(pred: Predictor) -> APIRouter:
             "busy": busy,
             "meals": meals,
             "wellness": {
-                "source": f"PMData {days[0]['participant']} from {days[0]['date']} ({req.wellness_day} day)"
+                "source": (
+                    f"Manual Module 2 input ({len(man.wellness.slots)} slot(s) given)"
+                    if manual_w
+                    else f"PMData {days[0]['participant']} from {days[0]['date']} ({req.wellness_day} day)"
+                )
                 + (f"; lowered for deadline load {loads[: req.days]} (StudentLife)" if any(loads) else ""),
+                "manual": manual_w,
+                "busy_source": "manual" if man.busy is not None else req.persona,
                 "hourly": [
-                    {"start": s.start.isoformat(), "energy": s.energy, "focus": s.focus} for s in sreq.wellness.slots
+                    {
+                        "start": s.start.isoformat(),
+                        "energy": s.energy,
+                        "focus": s.focus,
+                        "mental_fatigue": s.mental_fatigue,
+                        "burnout_risk": s.burnout_risk,
+                    }
+                    for s in sreq.wellness.slots
                 ],
             },
             "tasks": out_tasks,

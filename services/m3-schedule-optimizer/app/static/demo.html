@@ -74,6 +74,27 @@ td.num { font-variant-numeric: tabular-nums; }
 .sess:hover rect { stroke: var(--fg); stroke-width: 2; }
 .misslink { cursor: pointer; text-decoration: underline dotted; }
 .misslink:hover { color: var(--risk); }
+.manual { border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 10px; }
+.manual.on { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+.mtog { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.mgrid { border-collapse: collapse; font-size: .75rem; }
+.mgrid th { font-weight: 600; color: var(--muted); padding: 2px 3px; text-align: center; white-space: nowrap; }
+.mgrid th.rl { text-align: left; color: var(--fg); padding-right: 8px; }
+.mgrid td { padding: 1px; }
+.mgrid input { width: 46px; padding: 3px 2px; text-align: center; font-size: .75rem; border-radius: 5px; border: 1px solid var(--line); color: var(--fg); }
+#mJson { width: 100%; box-sizing: border-box; font: .78rem/1.4 ui-monospace, Menlo, monospace; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--fg); }
+.mbusy { display: inline-flex; gap: 3px; align-items: center; border: 1px solid var(--line); border-radius: 8px; padding: 2px 4px; }
+.mbusy input[type=time] { width: 100px; padding: 2px; }
+.dim { opacity: .45; pointer-events: none; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; counter-reset: st; }
+.flow div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: .82rem; background: var(--surface); }
+.flow div::before { counter-increment: st; content: counter(st); display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--bg); font-size: .72rem; font-weight: 700; margin-right: 6px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.stat b { display: block; font-size: 1.05rem; }
+.stat span { font-size: .75rem; color: var(--muted); }
+table.data { font-size: .8rem; }
+table.data td, table.data th { white-space: nowrap; padding: 4px 8px; }
+table.data td.n { text-align: right; font-variant-numeric: tabular-nums; }
 .tasks-edit .t.head { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .scroll { overflow-x: auto; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); }
@@ -108,6 +129,7 @@ details.json .copy { position: absolute; top: 6px; right: 14px; font-size: .75re
     <button role="tab" aria-selected="false" data-tab="p2">2 · Plan my days</button>
     <button role="tab" aria-selected="false" data-tab="p3">3 · Models &amp; data</button>
     <button role="tab" aria-selected="false" data-tab="p4">4 · JSON in / out</button>
+    <button role="tab" aria-selected="false" data-tab="p5">5 · Prepared data</button>
   </nav>
 </div></header>
 
@@ -162,11 +184,27 @@ details.json .copy { position: absolute; top: 6px; right: 14px; font-size: .75re
       <div class="row small"><span class="muted">Load a scenario:</span>
         <button class="ghost" data-scn="s1">1 · Normal day</button><button class="ghost" data-scn="s2">2 · Deadline crunch</button>
         <button class="ghost" data-scn="edge">Edge cases</button><button class="ghost" data-scn="over">Overload</button><button class="ghost" data-scn="empty">Empty list</button><button class="ghost" data-scn="lecture">Lecture 8–1</button></div>
+      <div class="manual" id="manualWrap">
+        <label class="mtog"><input type="checkbox" id="manualOn"> <span><b>Manual mode</b> — type Module 2's input yourself (replaces the PMData forecast, ATUS busy hours and the StudentLife adjustment)</span></label>
+        <div id="manualBox" hidden style="display:grid;gap:10px">
+          <div class="row small"><b>1 · Wellness forecast (what Module 2 sends)</b><span class="muted">start from:</span>
+            <button class="ghost" data-mp="pmdata">Current PMData plan</button><button class="ghost" data-mp="steady">Steady</button><button class="ghost" data-mp="morning">Morning person</button><button class="ghost" data-mp="night">Night owl</button><button class="ghost" data-mp="tired">Exhausted (burnout)</button>
+            <label>sleep last night <input type="number" id="mSleep" min="0" max="16" step="0.5" value="7" style="width:60px"> h</label></div>
+          <div class="small muted">Scores 0–1 for each hour (00–23), used on every planned day; tasks are only placed 06:00–23:00. In pasted JSON, hours left out count as neutral (0.5). Mean burnout above 0.7 → Module 3 reports overload.</div>
+          <div class="scroll"><table class="mgrid" id="mGrid"></table></div>
+          <div class="row small"><b>2 · Busy hours</b><span class="muted">(every planned day; replaces “Who is the user?”)</span><span id="mBusy" class="row"></span><button class="ghost" id="mBusyAdd">+ block</button></div>
+          <label class="small mtog"><input type="checkbox" id="mDl"> <span><b>3 · Deadline stress</b> — also lower the forecast for upcoming deadlines (StudentLife). Leave off when Module 2 already includes the workload.</span></label>
+          <details class="json"><summary class="small"><b>4 · Module 2 JSON</b> — the WellnessForecast sent to Module 3; paste a real one here to use it as is</summary>
+            <textarea id="mJson" rows="12" spellcheck="false" aria-label="Module 2 WellnessForecast JSON"></textarea>
+            <div class="row small"><button class="ghost" id="mFromTable">Rebuild from table</button><button class="ghost" id="mToTable">Load JSON into table</button><span id="mMsg" class="muted"></span></div>
+          </details>
+        </div>
+      </div>
       <div class="tasks-edit" id="taskEdit"></div>
       <div class="row"><button class="ghost" id="addTask">+ Add task</button><button class="primary" id="planBtn">Make my plan</button><span id="planMsg" class="small muted"></span></div>
     </div>
     <div class="card" id="planOut" hidden>
-      <div class="legend"><span><i style="background:var(--busy)"></i>work / class (ATUS)</span><span><i style="background:var(--good)"></i>likely on time</span><span><i style="background:var(--mid)"></i>uncertain</span><span><i style="background:var(--risk)"></i>at risk</span><span><i style="background:var(--accent)"></i>fixed event · dotted line = energy</span><span><i style="background:var(--mid-soft)"></i>meal break</span></div>
+      <div class="legend"><span><i style="background:var(--busy)"></i>busy hours (work / class)</span><span><i style="background:var(--good)"></i>likely on time</span><span><i style="background:var(--mid)"></i>uncertain</span><span><i style="background:var(--risk)"></i>at risk</span><span><i style="background:var(--accent)"></i>fixed event · dotted line = energy</span><span><i style="background:var(--mid-soft)"></i>meal break</span></div>
       <div class="small muted">Tip: click a task block on the timeline (or its time in the table) to mark it as <b>missed</b> — the plan is re-made from the end of that slot.</div>
       <div class="scroll" id="timeline"></div>
       <div id="missAsk"></div>
@@ -196,6 +234,16 @@ details.json .copy { position: absolute; top: 6px; right: 14px; font-size: .75re
       <div class="row"><button class="ghost" id="clearCalls">Clear</button></div>
       <div class="calls" id="calls"><span class="muted small">No calls yet — use tab 1 or 2.</span></div>
     </div>
+  </section>
+
+  <!-- ======================= 5. prepared data ======================= -->
+  <section class="panel" id="p5" hidden>
+    <div class="card">
+      <h2>Prepared data — what each dataset becomes before the models use it</h2>
+      <p class="muted small" style="margin:0">Raw data → preparation steps → the model-ready table. The rows below are real rows of the prepared tables (a small sample; the full tables are built by the training scripts).</p>
+      <div class="row" id="dsBtns"></div>
+    </div>
+    <div class="card" id="dsView"><span class="muted small">Loading…</span></div>
   </section>
 
   <!-- ======================= 3. models ======================= -->
@@ -492,8 +540,8 @@ function renderPlan(plan, sent, path) {
   $("#planOut").hidden = false;
   $("#timeline").innerHTML = drawTimeline(plan);
   const sm = plan.summary;
-  $("#wsrc").innerHTML = `<div class="row"><span class="pill neutral">${sm.tasks} tasks · ${sm.planned_hours} h</span><span class="pill ${sm.at_risk ? "risk" : "good"}">${sm.at_risk} at risk</span>${sm.unscheduled ? `<span class="pill risk">${sm.unscheduled} not placed</span>` : ""}${plan.overload_predicted ? `<span class="pill risk">⚠ overload: more work than free time before the deadlines</span>` : ""}</div>
-    <div class="small muted">Wellness: ${plan.wellness.source}. Busy hours: ${$("#persona").selectedOptions[0].text}. Models: ${plan.model.completion_model}, ${plan.model.tasktime_model}.</div>`;
+  $("#wsrc").innerHTML = `<div class="row"><span class="pill neutral">${sm.tasks} tasks · ${sm.planned_hours} h</span><span class="pill ${sm.at_risk ? "risk" : "good"}">${sm.at_risk} at risk</span>${sm.unscheduled ? `<span class="pill risk">${sm.unscheduled} not placed</span>` : ""}${plan.overload_predicted ? `<span class="pill risk">⚠ overload predicted: more work than free time, or burnout risk above 0.7</span>` : ""}</div>
+    <div class="small muted">Wellness: ${plan.wellness.source}. Busy hours: ${plan.wellness.busy_source === "manual" ? "manual" : $("#persona").selectedOptions[0].text}. Models: ${plan.model.completion_model}, ${plan.model.tasktime_model}.</div>`;
   const rp = plan.replan;
   $("#replanInfo").innerHTML = rp ? `<div class="card" style="background:var(--accent-soft)"><b>Re-planned (${rp.change === "missed" ? "task missed" : "urgent task added"})</b>
       <div class="small">Mode: <b>${rp.mode}</b> · kept ${rp.kept_sessions} existing session(s) in place · moved: ${rp.moved_tasks.length ? rp.moved_tasks.map((k) => plan.tasks.find((t) => t.task_key === k).title).join(", ") : "nothing"} · now = ${fmtD(rp.now)} ${fmtT(rp.now)}</div></div>` : "";
@@ -532,6 +580,9 @@ async function doPlan() {
   try { readTasks(); } catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; return; }
   $("#planMsg").textContent = "Planning…";
   lastReq = { persona: $("#persona").value, wellness_day: $("#wday").value, days: +$("#ndays").value, tasks, profile: profileBody() };
+  if ($("#manualOn").checked) {
+    try { lastReq.manual = manualBody(); } catch (e) { $("#planMsg").innerHTML = `<span class="err">Manual mode: ${e.message}</span>`; return; }
+  }
   try { renderPlan(await api("/v1/demo/plan", lastReq), lastReq, "POST /v1/demo/plan"); $("#planMsg").textContent = ""; }
   catch (e) { $("#planMsg").innerHTML = `<span class="err">${e.message}</span>`; }
 }
@@ -549,6 +600,137 @@ async function doReplan(change) {
 $("#planBtn").onclick = doPlan;
 $("#missBtn").onclick = () => doReplan({ kind: "missed", task_key: $("#missedSel").value });
 $("#urgBtn").onclick = () => doReplan({ kind: "add", new_task: T($("#urgTitle").value || "Urgent task", "work", +$("#urgMin").value, 5, 0) });
+
+// ---------- 5. prepared data
+let PREP = null, prepIdx = 0;
+function dataTable(t) {
+  return `<div class="scroll"><table class="data"><tr>${t.columns.map((c) => `<th>${esc(String(c))}</th>`).join("")}</tr>` +
+    t.rows.map((r) => `<tr>${r.map((v) => `<td class="${typeof v === "number" ? "n" : ""}">${v === null ? '<span class="muted">—</span>' : esc(String(v))}</td>`).join("")}</tr>`).join("") + "</table></div>";
+}
+function csvOf(t) {
+  const q = (v) => (v === null ? "" : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+  return [t.columns.map(q).join(","), ...t.rows.map((r) => r.map(q).join(","))].join("\n");
+}
+function showDataset(i) {
+  prepIdx = i; const d = PREP.datasets[i];
+  document.querySelectorAll("#dsBtns button").forEach((b, j) => b.setAttribute("aria-pressed", j === i));
+  let extra = "";
+  if (d.per_horizon) extra += `<h3>Cases per horizon</h3>${dataTable({ columns: ["asked", "rows", "on time"], rows: Object.entries(d.per_horizon).map(([k, v]) => [k, v.rows.toLocaleString(), pct(v["on time"])]) })}`;
+  if (d.example_day) extra += `<h3>One day turned into Module 2's hourly format (${d.example_day.participant}, ${d.example_day.date})</h3>${dataTable(d.example_day.hourly)}`;
+  if (d.one_row_all_features) extra += jsonBox("in", "One prepared case — all 65 model features (the first row above)", d.one_row_all_features);
+  $("#dsView").innerHTML = `<div><h2 style="margin:0">${esc(d.name)}</h2><div class="small"><b>Used for:</b> ${esc(d.used_for)}</div></div>
+    <div class="small"><b>Raw data:</b> ${esc(d.raw)}</div>
+    <div><div class="small muted" style="margin-bottom:6px"><b>Preparation steps</b></div><div class="flow">${d.steps.map((s) => `<div>${esc(s)}</div>`).join("")}</div></div>
+    <div class="kv">${Object.entries(d.stats).map(([k, v]) => `<div class="stat"><b>${typeof v === "number" ? v.toLocaleString() : esc(String(v))}</b><span>${esc(k)}</span></div>`).join("")}</div>
+    <div class="row"><b class="small">Sample of the prepared table (${d.sample.rows.length} rows)</b><button class="ghost" id="dsCsv">Download sample CSV</button></div>
+    ${dataTable(d.sample)}${extra}`;
+  $("#dsCsv").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csvOf(d.sample)], { type: "text/csv" }));
+    a.download = d.name.split(" ")[0].toLowerCase().replace(/[^a-z0-9-]/g, "") + "_prepared_sample.csv"; a.click();
+  };
+}
+api("/v1/demo/prepared").then((p) => {
+  PREP = p;
+  $("#dsBtns").innerHTML = p.datasets.map((d, i) => `<button class="ghost" data-ds="${i}">${esc(d.name.split(" → ")[0])}</button>`).join("");
+  document.querySelectorAll("[data-ds]").forEach((b) => (b.onclick = () => showDataset(+b.dataset.ds)));
+  showDataset(0);
+}).catch((e) => { $("#dsView").innerHTML = `<span class="err">${esc(e.message)}</span>`; });
+
+// ---------- manual mode: Module 2's input typed or pasted by hand
+const MH = Array.from({ length: 24 }, (_, i) => i);   // every hour of the day
+const MROWS = [["energy", "Energy"], ["focus", "Focus"], ["mental_fatigue", "Mental fatigue"], ["burnout_risk", "Burnout risk"]];
+let MAN = {}, MBUSY = [], mJsonDirty = false, CTX = null;
+const clamp01 = (x) => Math.round(Math.max(0, Math.min(1, x)) * 100) / 100;
+const PRESET = {   // h < 6: asleep (low energy) except for the night owl
+  steady: (h) => ({ e: h < 6 ? 0.25 : 0.6, b: 0.2 }),
+  morning: (h) => ({ e: h < 5 ? 0.15 : 0.85 - 0.035 * Math.max(0, h - 9) - 0.12 * Math.max(0, 8 - h), b: 0.2 }),
+  night: (h) => ({ e: h < 2 ? 0.75 : h < 9 ? 0.25 : Math.min(0.85, 0.4 + 0.04 * (h - 9)), b: 0.25 }),
+  tired: (h) => ({ e: h < 6 ? 0.15 : 0.3 - 0.01 * Math.max(0, h - 14), b: 0.8 }),
+};
+function setPreset(kind) {
+  if (kind === "pmdata") {
+    if (!lastPlan || lastPlan.wellness.manual) { $("#mMsg").textContent = "Make a plan without manual mode first, then copy it."; return; }
+    MH.forEach((h) => { MAN[h] = MAN[h] || { energy: 0.5, focus: 0.5, mental_fatigue: 0.3, burnout_risk: 0.2 }; });
+    lastPlan.wellness.hourly.slice(0, 24).forEach((s) => {   // the first 24 hours of the plan
+      const h = Math.floor(colomboHours(s.start));
+      if (MH.includes(h)) MAN[h] = { energy: clamp01(s.energy), focus: clamp01(s.focus), mental_fatigue: clamp01(s.mental_fatigue ?? 1 - s.energy), burnout_risk: clamp01(s.burnout_risk ?? 0.2) };
+    });
+  } else {
+    MH.forEach((h) => { const { e, b } = PRESET[kind](h); MAN[h] = { energy: clamp01(e), focus: clamp01(e - 0.04), mental_fatigue: clamp01(1 - e), burnout_risk: clamp01(b) }; });
+  }
+  mJsonDirty = false; drawGrid(); syncJson();
+}
+function cellBg(k, v) {  // tint: good = green for energy/focus, risk = orange for fatigue/burnout
+  const good = k === "energy" || k === "focus";
+  return `color-mix(in srgb, var(--${good ? "good" : "risk"}) ${Math.round(v * 55)}%, var(--surface))`;
+}
+function drawGrid() {
+  $("#mGrid").innerHTML = `<tr><th></th>${MH.map((h) => `<th>${String(h).padStart(2, "0")}</th>`).join("")}</tr>` +
+    MROWS.map(([k, lab]) => `<tr><th class="rl">${lab}</th>${MH.map((h) => `<td><input type="number" min="0" max="1" step="0.05" data-h="${h}" data-k="${k}" value="${MAN[h][k]}" style="background:${cellBg(k, MAN[h][k])}" aria-label="${lab} at ${h}:00"></td>`).join("")}</tr>`).join("");
+}
+$("#mGrid").addEventListener("input", (e) => {
+  const el = e.target; if (!el.dataset.k) return;
+  const v = clamp01(+el.value || 0); MAN[+el.dataset.h][el.dataset.k] = v; el.style.background = cellBg(el.dataset.k, v);
+  mJsonDirty = false; syncJson();
+});
+function planDates() {
+  const base = (CTX && CTX.plan_start ? CTX.plan_start : new Date().toISOString()).slice(0, 10);
+  return Array.from({ length: +$("#ndays").value }, (_, d) => new Date(Date.parse(base + "T00:00:00Z") + d * 864e5).toISOString().slice(0, 10));
+}
+function tableJson() {
+  const slots = [];
+  planDates().forEach((day) => MH.forEach((h) => {
+    const t0 = Date.parse(`${day}T${String(h).padStart(2, "0")}:00:00+05:30`);
+    slots.push({ start: colomboIso(t0), end: colomboIso(t0 + 36e5), ...MAN[h] });
+  }));
+  return { user_id: (crypto.randomUUID ? crypto.randomUUID() : "00000000-0000-4000-8000-000000000000"), generated_at: `${planDates()[0]}T07:00:00+05:30`,
+    slot_minutes: 60, sleep_hours_last_night: +$("#mSleep").value, slots, model: { name: "m2-wellness (typed in demo)", version: "1.0" } };
+}
+function colomboIso(ms) { return new Date(ms + 5.5 * 36e5).toISOString().slice(0, 19) + "+05:30"; }
+function syncJson() {
+  if (mJsonDirty) return;
+  $("#mJson").value = JSON.stringify(tableJson(), null, 2);
+  $("#mMsg").textContent = `Built from the table: ${MH.length} hours × ${$("#ndays").value} day(s).`;
+}
+$("#mJson").addEventListener("input", () => { mJsonDirty = true; $("#mMsg").textContent = "Using your edited / pasted JSON."; });
+$("#mFromTable").onclick = () => { mJsonDirty = false; syncJson(); };
+$("#mToTable").onclick = () => {
+  try {
+    const j = JSON.parse($("#mJson").value); const seen = new Set();
+    (j.slots || []).forEach((s) => { const h = Math.floor(colomboHours(s.start)); if (MH.includes(h) && !seen.has(h)) { seen.add(h); MROWS.forEach(([k]) => { if (s[k] != null) MAN[h][k] = clamp01(+s[k]); }); } });
+    if (j.sleep_hours_last_night != null) $("#mSleep").value = j.sleep_hours_last_night;
+    drawGrid(); $("#mMsg").textContent = `Loaded ${seen.size} hour(s) into the table (the JSON is still what is sent).`;
+  } catch (e) { $("#mMsg").innerHTML = `<span class="err">Not valid JSON: ${e.message}</span>`; }
+};
+$("#mSleep").oninput = syncJson;
+$("#ndays").addEventListener("change", syncJson);
+function drawBusy() {
+  $("#mBusy").innerHTML = MBUSY.length ? MBUSY.map(([a, b], i) => `<span class="mbusy"><input type="time" step="900" value="${a}" data-bi="${i}" data-bj="0" aria-label="busy start">–<input type="time" step="900" value="${b}" data-bi="${i}" data-bj="1" aria-label="busy end"><button class="ghost" data-brm="${i}" aria-label="remove busy block" style="padding:0 6px">×</button></span>`).join("")
+    : '<span class="muted">none — the whole day is free</span>';
+}
+$("#mBusy").addEventListener("change", (e) => { const el = e.target; if (el.dataset.bi) MBUSY[+el.dataset.bi][+el.dataset.bj] = el.value; });
+$("#mBusy").addEventListener("click", (e) => { const b = e.target.closest("[data-brm]"); if (b) { MBUSY.splice(+b.dataset.brm, 1); drawBusy(); } });
+$("#mBusyAdd").onclick = () => { MBUSY.push(["09:00", "12:00"]); drawBusy(); };
+document.querySelectorAll("[data-mp]").forEach((b) => (b.onclick = () => setPreset(b.dataset.mp)));
+$("#manualOn").onchange = () => {
+  const on = $("#manualOn").checked;
+  $("#manualBox").hidden = !on; $("#manualWrap").classList.toggle("on", on);
+  ["#persona", "#wday"].forEach((id) => $(id).closest("label").classList.toggle("dim", on));
+  if (on && !Object.keys(MAN).length) {
+    const p = CTX && CTX.personas[$("#persona").value];
+    MBUSY = (p || []).map(([a, b]) => [a, b === "24:00" ? "23:45" : b]); drawBusy();
+    setPreset(lastPlan && !lastPlan.wellness.manual ? "pmdata" : "steady");
+  }
+};
+function manualBody() {
+  let w;
+  try { w = JSON.parse($("#mJson").value); } catch (e) { throw new Error("the Module 2 JSON is not valid JSON"); }
+  if (!Array.isArray(w.slots) || !w.slots.length) throw new Error("the Module 2 JSON needs a non-empty \"slots\" list");
+  for (const [a, b] of MBUSY) if (!a || !b || toMin(b) <= toMin(a)) throw new Error(`busy block ${a}–${b}: end must be after start`);
+  return { wellness: w, busy: MBUSY.map(([a, b]) => `${a}-${b}`), deadline_effect: $("#mDl").checked };
+}
+api("/v1/demo/context").then((c) => { CTX = c; }).catch(() => {});
 
 document.getElementById("clearCalls").onclick = () => { CALLS.length = 0; renderCalls(); };
 

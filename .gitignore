@@ -35,6 +35,7 @@ services/*/models/*
 !services/m3-schedule-optimizer/models/demo_examples.json
 !services/m3-schedule-optimizer/models/atus_day_profiles.json
 !services/m3-schedule-optimizer/models/pmdata_wellness_days.json
+!services/m3-schedule-optimizer/models/prepared_preview.json
 # training reports can be large; keep markdown + figures, drop raw prediction dumps
 services/*/reports/*.csv.gz
 
