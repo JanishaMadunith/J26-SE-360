@@ -1,0 +1,10 @@
+{
+  "model_name": "m4-lightgcn-knowledge-graph-ranker",
+  "version": "0.3.0",
+  "architecture": "LightGCN (2-layer graph convolution)",
+  "embedding_dim": 32,
+  "loss_function": "Bayesian Personalized Ranking (BPR)",
+  "num_nodes": 72,
+  "training_time_sec": 0.12,
+  "target_task": "Predicts user context-food-nutrient compatibility ranking"
+}
