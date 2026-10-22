@@ -1,31 +1,31 @@
 {
   "model_name": "m2-hgb-slot-forecaster",
-  "version": "0.2.0",
-  "data_type": "StudentLife multimodal dataset",
+  "version": "0.3.0",
+  "data_type": "synthetic",
   "metrics": {
     "mental_fatigue": {
-      "mae": 0.0214,
-      "r2": 0.9581,
-      "baseline_mae": 0.0658,
-      "baseline_r2": 0.5602
+      "mae": 0.0156,
+      "r2": 0.9818,
+      "baseline_mae": 0.0657,
+      "baseline_r2": 0.5993
     },
     "focus": {
-      "mae": 0.0277,
-      "r2": 0.9037,
+      "mae": 0.0177,
+      "r2": 0.9645,
       "baseline_mae": 0.0554,
-      "baseline_r2": 0.6322
+      "baseline_r2": 0.6394
     },
     "energy": {
-      "mae": 0.0398,
-      "r2": 0.8914,
+      "mae": 0.0175,
+      "r2": 0.9804,
       "baseline_mae": 0.0467,
-      "baseline_r2": 0.8508
+      "baseline_r2": 0.8509
     },
     "burnout_risk": {
-      "mae": 0.0356,
-      "r2": 0.7691,
+      "mae": 0.0115,
+      "r2": 0.9804,
       "baseline_mae": 0.085,
-      "baseline_r2": 0.0071
+      "baseline_r2": 0.0088
     }
   }
 }

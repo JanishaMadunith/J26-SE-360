@@ -22,6 +22,28 @@ def body(**kw):
     return b
 
 
+def manual_inputs(**current):
+    defaults = {
+        "date": "2026-10-17",
+        "sleep_hours": 7.0,
+        "wake_hour": 7.0,
+        "steps": 6000,
+        "stress": 0.4,
+        "tasks_due_24h": 2,
+        "minutes_due_24h": 120,
+        "tasks_overdue": 0,
+        "tasks_pending": 2,
+    }
+    defaults.update(current)
+    return {
+        "history": [
+            {**defaults, "date": "2026-10-15", "stress": 0.3},
+            {**defaults, "date": "2026-10-16", "stress": 0.5},
+        ],
+        "current": defaults,
+    }
+
+
 def screen_night(sleep_hours: float):
     """Screen off at 23:00 Colombo the previous night, unlock `sleep_hours` later."""
     off = datetime(2026, 10, 16, 17, 30, tzinfo=UTC)  # 23:00 Colombo
@@ -141,3 +163,42 @@ def test_trained_predictor_handles_empty_request():
                 slot.burnout_risk,
             )
         )
+
+
+def test_manual_inputs_change_trained_prediction():
+    predictor = Predictor()
+    if predictor.models is None:
+        pytest.skip("trained model files are not available")
+
+    request = WellnessForecastRequest.model_validate(
+        body(manual_inputs=manual_inputs(sleep_hours=4.0, stress=0.9, tasks_overdue=4))
+    )
+    forecast = predictor.predict(request)
+
+    assert len(forecast.slots) == 24
+    assert forecast.sleep_hours_last_night == 4.0
+    assert forecast.model.name == "m2-hgb-slot-forecaster"
+    assert all(0 <= slot.energy <= 1 for slot in forecast.slots)
+
+
+def test_trained_predictor_uses_sleep_recovery():
+    predictor = Predictor()
+    if predictor.models is None:
+        pytest.skip("trained model files are not available")
+
+    request = WellnessForecastRequest.model_validate(
+        body(
+            as_of="2026-10-17T21:00:00+00:00",
+            timezone="UTC",
+            manual_inputs=manual_inputs(sleep_hours=6.5),
+        )
+    )
+    forecast = predictor.predict(request)
+    sleeping = [slot for slot in forecast.slots if slot.start.hour >= 23 or slot.start.hour < 7]
+    waking = [slot for slot in forecast.slots if slot.start.hour == 7]
+
+    assert sleeping
+    assert waking
+    assert all(slot.energy <= 0.2 and slot.focus <= 0.05 for slot in sleeping)
+    assert sleeping[-1].mental_fatigue <= sleeping[0].mental_fatigue
+    assert waking[0].energy >= 0.45

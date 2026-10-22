@@ -1,9 +1,9 @@
 """Process StudentLife multimodal dataset into M2 forecast training windows."""
+
 from __future__ import annotations
 
 import glob
 import json
-import math
 import os
 import pathlib
 from datetime import datetime, timedelta
@@ -84,7 +84,11 @@ def parse_sensing_steps(sensing_dir: pathlib.Path) -> dict[tuple[str, str], floa
         active = df[df["activity inference"].isin([1, 2])]
         if active.empty:
             continue
-        dates = pd.to_datetime(active["timestamp"], unit="s", utc=True).dt.tz_convert(STUDENTLIFE_TZ).dt.strftime("%Y-%m-%d")
+        dates = (
+            pd.to_datetime(active["timestamp"], unit="s", utc=True)
+            .dt.tz_convert(STUDENTLIFE_TZ)
+            .dt.strftime("%Y-%m-%d")
+        )
         step_val = (active["activity inference"] == 1) * 4.5 + (active["activity inference"] == 2) * 8.0
         daily = step_val.groupby(dates).sum()
         for d, s in daily.items():
@@ -138,9 +142,25 @@ def parse_ema_sleep(ema_dir: pathlib.Path) -> dict[tuple[str, str], dict]:
     """Parse Sleep EMA records."""
     sleep_ema: dict[tuple[str, str], dict] = {}
     hour_map = {
-        "1": 2.5, "2": 3.5, "3": 4.0, "4": 4.5, "5": 5.0, "6": 5.5, "7": 6.0, "8": 6.5,
-        "9": 7.0, "10": 7.5, "11": 8.0, "12": 8.5, "13": 9.0, "14": 9.5, "15": 10.0,
-        "16": 10.5, "17": 11.0, "18": 11.5, "19": 12.0,
+        "1": 2.5,
+        "2": 3.5,
+        "3": 4.0,
+        "4": 4.5,
+        "5": 5.0,
+        "6": 5.5,
+        "7": 6.0,
+        "8": 6.5,
+        "9": 7.0,
+        "10": 7.5,
+        "11": 8.0,
+        "12": 8.5,
+        "13": 9.0,
+        "14": 9.5,
+        "15": 10.0,
+        "16": 10.5,
+        "17": 11.0,
+        "18": 11.5,
+        "19": 12.0,
     }
     files = glob.glob(str(ema_dir / "response" / "Sleep" / "*.json"))
     for f in files:
@@ -230,10 +250,7 @@ def build_studentlife_dataset(
 
     # Collect all user IDs
     all_uids = sorted(
-        set(ema_stress.keys())
-        | {u for u, _ in sensing_sleep}
-        | {u for u, _ in steps_map}
-        | {u for u, _ in deadlines}
+        set(ema_stress.keys()) | {u for u, _ in sensing_sleep} | {u for u, _ in steps_map} | {u for u, _ in deadlines}
     )
 
     # Date range across study: March 28, 2013 to June 1, 2013
@@ -288,24 +305,18 @@ def build_studentlife_dataset(
             minutes_due_24h = tasks_due_24h * 120.0
             # overdue: sum of past 7 days
             tasks_overdue = sum(
-                deadlines.get((uid, (curr_date - timedelta(days=i)).strftime("%Y-%m-%d")), 0)
-                for i in range(1, 8)
+                deadlines.get((uid, (curr_date - timedelta(days=i)).strftime("%Y-%m-%d")), 0) for i in range(1, 8)
             )
             tasks_pending = sum(
-                deadlines.get((uid, (curr_date + timedelta(days=i)).strftime("%Y-%m-%d")), 0)
-                for i in range(1, 8)
+                deadlines.get((uid, (curr_date + timedelta(days=i)).strftime("%Y-%m-%d")), 0) for i in range(1, 8)
             )
 
             # 4. Stress history (as of query time ~09:00 local)
             asof_dt = datetime(curr_date.year, curr_date.month, curr_date.day, 9, 0, tzinfo=STUDENTLIFE_TZ)
             recent_stress_24h = [
-                s["score"] for s in u_stress_list
-                if asof_dt - timedelta(hours=24) <= s["dt"] <= asof_dt
+                s["score"] for s in u_stress_list if asof_dt - timedelta(hours=24) <= s["dt"] <= asof_dt
             ]
-            recent_stress_7d = [
-                s["score"] for s in u_stress_list
-                if asof_dt - timedelta(days=7) <= s["dt"] <= asof_dt
-            ]
+            recent_stress_7d = [s["score"] for s in u_stress_list if asof_dt - timedelta(days=7) <= s["dt"] <= asof_dt]
 
             if recent_stress_24h:
                 stress_last = float(recent_stress_24h[-1])
@@ -315,7 +326,9 @@ def build_studentlife_dataset(
                 stress_last = np.nan
 
             stress_mean7 = float(np.mean(recent_stress_7d)) if recent_stress_7d else np.nan
-            stress_trend = (stress_last - stress_mean7) if (pd.notna(stress_last) and pd.notna(stress_mean7)) else np.nan
+            stress_trend = (
+                (stress_last - stress_mean7) if (pd.notna(stress_last) and pd.notna(stress_mean7)) else np.nan
+            )
             aff_conf = 0.85 if pd.notna(stress_last) else np.nan
 
             # Effective baseline values for targets
@@ -326,10 +339,7 @@ def build_studentlife_dataset(
             sleep_debt = max(0.0, 7.5 - eff_sleep)
 
             # PAM arousal around this day
-            pam_today = [
-                p["arousal"] for p in u_pam_list
-                if abs((p["dt"].date() - curr_date).days) <= 1
-            ]
+            pam_today = [p["arousal"] for p in u_pam_list if abs((p["dt"].date() - curr_date).days) <= 1]
             self_arousal = float(np.mean(pam_today)) if pam_today else 0.5
 
             # Productivity self-report
@@ -338,6 +348,7 @@ def build_studentlife_dataset(
             # Build request features dictionary
             req_features = {
                 "sleep_h": sleep_h,
+                "sleep_debt": sleep_debt,
                 "wake_hour": wake_h,
                 "stress_last": stress_last,
                 "stress_mean7": stress_mean7,
@@ -349,12 +360,35 @@ def build_studentlife_dataset(
                 "tasks_overdue": tasks_overdue,
                 "tasks_pending": tasks_pending,
                 "asof_hour": 9.0,
+                "sleep_mean3": sleep_h,
+                "sleep_trend3": 0.0,
+                "steps_mean3": steps_24h,
+                "steps_trend3": 0.0,
+                "stress_mean3": eff_stress_7d,
+                "fatigue_mean3": np.nan,
+                "fatigue_trend3": np.nan,
+                "focus_mean3": np.nan,
+                "focus_trend3": np.nan,
+                "energy_mean3": np.nan,
+                "energy_trend3": np.nan,
+                "overwhelmed_mean3": np.nan,
+                "overwhelmed_trend3": np.nan,
+                "current_fatigue": np.nan,
+                "current_focus": np.nan,
+                "current_energy": np.nan,
+                "current_overwhelmed": np.nan,
+                "previous_fatigue": np.nan,
+                "previous_focus": np.nan,
+                "previous_energy": np.nan,
+                "previous_burnout": np.nan,
+                "bedtime_hour": 23.0,
+                "next_wake_hour": 7.0,
             }
 
             # Generate 24 hourly forecast slots
             for k in range(24):
                 slot_clock = (9.0 + k) % 24
-                sf = slot_features(slot_clock, eff_wake, float(k))
+                sf = slot_features(slot_clock, eff_wake, float(k), 23.0, 7.0, 9.0)
 
                 # Circadian alertness and homeostatic fatigue
                 c = circadian(slot_clock)
@@ -367,15 +401,19 @@ def build_studentlife_dataset(
 
                 # Energy: circadian alertness, homeostatic sleep pressure, debt, stress, steps, PAM arousal
                 base_energy = clip01(
-                    0.20 + 0.80 * c - 0.35 * s - 0.25 * debt - 0.10 * stress_val
-                    + min(0.05, steps_24h / 150000.0)
+                    0.20 + 0.80 * c - 0.35 * s - 0.25 * debt - 0.10 * stress_val + min(0.05, steps_24h / 150000.0)
                 )
                 energy = clip01(0.70 * base_energy + 0.30 * self_arousal + rng.normal(0, 0.015))
 
                 # Mental fatigue: rises with wakefulness, sleep debt, workload, stress, trouble staying awake
                 fatigue = clip01(
-                    0.15 + 0.55 * s + 0.25 * debt + 0.15 * wl_minutes + 0.15 * stress_val
-                    + 0.05 * (social_trouble - 1) - 0.10 * (c - 0.5)
+                    0.15
+                    + 0.55 * s
+                    + 0.25 * debt
+                    + 0.15 * wl_minutes
+                    + 0.15 * stress_val
+                    + 0.05 * (social_trouble - 1)
+                    - 0.10 * (c - 0.5)
                     + rng.normal(0, 0.015)
                 )
 
@@ -385,23 +423,45 @@ def build_studentlife_dataset(
 
                 # Burnout risk: chronic stress, survey baseline, overdue tasks, debt, fatigue
                 burnout = clip01(
-                    0.08 + 0.35 * stress_7d_val + 0.20 * burnout_base + 0.20 * wl_overdue
-                    + 0.15 * wl_minutes + 0.15 * debt + 0.10 * fatigue
+                    0.08
+                    + 0.35 * stress_7d_val
+                    + 0.20 * burnout_base
+                    + 0.20 * wl_overdue
+                    + 0.15 * wl_minutes
+                    + 0.15 * debt
+                    + 0.10 * fatigue
                     + rng.normal(0, 0.01)
                 )
 
-                rows.append({
-                    "user_id": uid,
-                    "date": d_str,
-                    **req_features,
-                    **sf,
-                    "mental_fatigue": round(fatigue, 4),
-                    "focus": round(focus, 4),
-                    "energy": round(energy, 4),
-                    "burnout_risk": round(burnout, 4),
-                })
+                rows.append(
+                    {
+                        "user_id": uid,
+                        "date": d_str,
+                        **req_features,
+                        **sf,
+                        "mental_fatigue": round(fatigue, 4),
+                        "focus": round(focus, 4),
+                        "energy": round(energy, 4),
+                        "burnout_risk": round(burnout, 4),
+                    }
+                )
 
     df = pd.DataFrame(rows)
+    df = df.sort_values(["user_id", "date"]).reset_index(drop=True)
+    for feature, target in (
+        ("current_fatigue", "mental_fatigue"),
+        ("current_focus", "focus"),
+        ("current_energy", "energy"),
+        ("current_overwhelmed", "burnout_risk"),
+    ):
+        df[feature] = df.groupby("user_id")[target].shift(24)
+    for feature, target in (
+        ("previous_fatigue", "mental_fatigue"),
+        ("previous_focus", "focus"),
+        ("previous_energy", "energy"),
+        ("previous_burnout", "burnout_risk"),
+    ):
+        df[feature] = df.groupby("user_id")[target].shift(1)
     print(f"Generated dataset with shape: {df.shape}")
 
     if output_csv:
@@ -431,15 +491,15 @@ def get_data_dir() -> pathlib.Path:
 
 def load_or_build_dataset(data_dir: str | pathlib.Path | None = None) -> pd.DataFrame:
     """Load cached StudentLife training dataset or build it if not found."""
-    if data_dir is None:
-        base = get_data_dir()
-    else:
-        base = pathlib.Path(data_dir)
+    base = get_data_dir() if data_dir is None else pathlib.Path(data_dir)
 
     cache_file = base / "m2_studentlife.csv"
     if cache_file.exists():
-        print(f"Loading cached dataset from {cache_file}...")
-        return pd.read_csv(cache_file)
+        cached = pd.read_csv(cache_file)
+        if set(FEATURES).issubset(cached.columns):
+            print(f"Loading cached dataset from {cache_file}...")
+            return cached
+        print("Cached dataset uses an older feature set; rebuilding it...")
 
     ds_dir = base / "dataset" if (base / "dataset").exists() else base
     return build_studentlife_dataset(ds_dir, output_csv=cache_file)

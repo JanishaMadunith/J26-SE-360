@@ -1,11 +1,9 @@
 """Train M2 models on StudentLife multimodal dataset and report metrics."""
 import json
-import os
 import pathlib
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import GroupShuffleSplit
@@ -31,6 +29,11 @@ def main():
     # split by USER so no person appears in both train and test
     tr, te = next(GroupShuffleSplit(test_size=0.2, random_state=0).split(df, groups=df.user_id))
     train, test = df.iloc[tr], df.iloc[te]
+    train_features = train[FEATURES].replace([np.inf, -np.inf], np.nan)
+    test_features = test[FEATURES].replace([np.inf, -np.inf], np.nan)
+    medians = train_features.median().fillna(0.0)
+    train_features = train_features.fillna(medians)
+    test_features = test_features.fillna(medians)
 
     # baseline: average per time-of-day, no user context
     train_key, test_key = key(train), key(test)
@@ -38,8 +41,8 @@ def main():
     results = {}
     for t in TARGETS:
         model = HistGradientBoostingRegressor(max_iter=300, learning_rate=0.08, random_state=0)
-        model.fit(train[FEATURES], train[t])
-        pred = np.clip(model.predict(test[FEATURES]), 0, 1)
+        model.fit(train_features, train[t])
+        pred = np.clip(model.predict(test_features), 0, 1)
 
         base = test_key.map(train.groupby(train_key)[t].mean()).fillna(train[t].mean())
         results[t] = {
@@ -56,15 +59,15 @@ def main():
         "targets": TARGETS,
         "train_rows": len(train),
         "test_rows": len(test),
-        "data": "StudentLife multimodal dataset",
+        "data": "synthetic StudentLife-derived multimodal dataset",
         "metrics": results,
     }
     (MODELS / "metrics.json").write_text(json.dumps(meta, indent=2))
 
     card = {
         "model_name": "m2-hgb-slot-forecaster",
-        "version": "0.2.0",
-        "data_type": "StudentLife multimodal dataset",
+        "version": "0.3.0",
+        "data_type": "synthetic",
         "metrics": results,
     }
     (MODELS / "model_card.json").write_text(json.dumps(card, indent=2))

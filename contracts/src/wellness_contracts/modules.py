@@ -7,6 +7,7 @@ Ownership:
   M4 Context-Aware Food Recommendation  T.C. Gunaweera
 """
 
+from datetime import date
 from enum import Enum
 from typing import Annotated
 from uuid import UUID
@@ -66,11 +67,38 @@ class WorkloadSummary(Contract):
     tasks_pending: int = 0
 
 
+class ManualWellnessDay(Contract):
+    """One manually entered daily wellness record for the M2 demo."""
+
+    date: date
+    sleep_hours: float = Field(ge=0, le=16)
+    wake_hour: float = Field(ge=0, lt=24)
+    steps: int = Field(ge=0)
+    stress: Score01
+    mental_tiredness: Score01 = 0.5
+    focus: Score01 = 0.5
+    energy: Score01 = 0.5
+    overwhelmed: Score01 = 0.5
+    bedtime_hour: float = Field(default=23.0, ge=0, lt=24)
+    next_wake_hour: float = Field(default=7.0, ge=0, lt=24)
+    tasks_due_24h: int = Field(ge=0)
+    minutes_due_24h: int = Field(ge=0)
+    tasks_overdue: int = Field(ge=0)
+    tasks_pending: int = Field(ge=0)
+
+
+class ManualWellnessInputs(Contract):
+    """Current values plus up to three prior daily records for demo predictions."""
+
+    history: list[ManualWellnessDay] = Field(default=[], max_length=3)
+    current: ManualWellnessDay
+
+
 class WellnessForecastRequest(Contract):
     user_id: UUID
     as_of: AwareDatetime
     timezone: str = "Asia/Colombo"
-    horizon_hours: int = Field(default=24, ge=1, le=72)
+    horizon_hours: int = Field(default=24, ge=1, le=24)
     slot_minutes: int = Field(
         default=60,
         ge=15,
@@ -84,6 +112,7 @@ class WellnessForecastRequest(Contract):
     light: list[LightReading] = []
     self_reports: list[SelfReport] = []
     workload: WorkloadSummary = WorkloadSummary()
+    manual_inputs: ManualWellnessInputs | None = None
 
 
 class WellnessSlot(Contract):

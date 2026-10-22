@@ -50,6 +50,7 @@ Data never goes in the repo: read it from `DATA_DIR` (the `07-datasets` folder n
 cd services/m2-wellness-prediction
 ../../.venv/bin/python -m pytest                     # tests
 ../../.venv/bin/uvicorn app.main:app --reload --port 8102   # http://localhost:8102/docs
+../../.venv/bin/streamlit run app/streamlit_app.py         # interactive manual-input demo
 ```
 
 Or everything together: `make up` (Docker Compose) from the repo root. `make test-m2` runs only these tests.
