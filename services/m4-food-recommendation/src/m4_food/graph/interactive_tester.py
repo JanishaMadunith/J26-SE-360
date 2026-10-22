@@ -1,4 +1,4 @@
-"""Interactive Tester & Benchmark Evaluator for M4 Knowledge Graph Recommendations.
+"""Interactive Tester & Benchmark Evaluator for Knowledge Graph Recommendations.
 
 Run from repository root:
     python -m services.m4-food-recommendation.src.m4_food.graph.interactive_tester --eval

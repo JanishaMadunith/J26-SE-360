@@ -1,4 +1,4 @@
-"""Knowledge Graph Service Adapter for the M4 FastAPI Endpoint.
+"""Knowledge Graph Service Adapter for the FastAPI Endpoint.
 
 Translates wellness_contracts.RecommendationRequest into Knowledge Graph traversal,
 safety filtering, context scoring, and returns MealRecommendation and SuggestedActivity contracts.
@@ -278,6 +278,14 @@ class KnowledgeGraphService:
     def recommend(self, req: RecommendationRequest) -> tuple[list[MealRecommendation], list[SuggestedActivity]]:
         tz = ZoneInfo(req.timezone)
         label = req.affective_state.label if req.affective_state else None
+        # Auto-sync safeguard: if current label has 0 probability, pick highest probability label
+        if req.affective_state and req.affective_state.probabilities:
+            probs = req.affective_state.probabilities
+            if probs:
+                best_label = max(probs, key=probs.get)
+                if probs.get(label, 0) == 0 and probs[best_label] > 0:
+                    label = best_label
+
         meals = []
         used: dict[str, int] = {}
 

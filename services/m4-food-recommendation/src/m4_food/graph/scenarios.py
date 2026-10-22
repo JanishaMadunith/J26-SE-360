@@ -1,4 +1,4 @@
-"""Ground Truth Evaluation Scenarios: Based on Table 8 of the Project Proposal."""
+
 
 from __future__ import annotations
 

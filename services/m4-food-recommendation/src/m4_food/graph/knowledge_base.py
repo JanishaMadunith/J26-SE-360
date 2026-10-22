@@ -1,4 +1,4 @@
-"""Knowledge Base: Graph Builder, Triple Definitions, and Domain Knowledge Graph."""
+
 
 import json
 from pathlib import Path
