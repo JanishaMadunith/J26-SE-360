@@ -103,8 +103,23 @@ def stress_share(history: Sequence[AffectiveStateResult], as_of: datetime, hours
     if not recent:
         return 0.0
     w = sum(h.confidence for h in recent) or 1.0
-    s = sum(h.confidence for h in recent if h.label in (AffectiveLabel.stress, AffectiveLabel.anxiety))
-    return s / w
+    total_stress = 0.0
+    for h in recent:
+        if hasattr(h, "probabilities") and h.probabilities:
+            p_stress = (
+                h.probabilities.get(AffectiveLabel.stress)
+                or h.probabilities.get("stress")
+                or h.probabilities.get("Angry", 0.0)
+            )
+            p_anx = (
+                h.probabilities.get(AffectiveLabel.anxiety)
+                or h.probabilities.get("anxiety", 0.0)
+            )
+            total_stress += h.confidence * min(1.0, float(p_stress) + 0.5 * float(p_anx))
+        elif h.label in (AffectiveLabel.stress, AffectiveLabel.anxiety) or str(h.label).lower() in ("stress", "anxiety", "angry"):
+            total_stress += h.confidence
+    return clip01(total_stress / w)
+
 
 
 def latest_energy_report(reports: Sequence[SelfReport], as_of: datetime) -> tuple[float, datetime] | None:

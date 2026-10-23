@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 
 from m2_wellness.heuristics import estimate_sleep, stress_share
+from wellness_contracts import AffectiveLabel
 
 FEATURES = [
     "sleep_h",
@@ -181,8 +182,22 @@ def request_features(req) -> dict:
         s7 = stress_share(hist, req.as_of, 24 * 7)
         stress_last, stress_mean7, stress_trend = s24, s7, s24 - s7
         aff_conf = float(np.mean([r.confidence for r in hist]))
+
+        # Derive initial cognitive states from the latest M1 fused output
+        latest = hist[-1]
+        probs = latest.probabilities if hasattr(latest, "probabilities") and latest.probabilities else {}
+        p_str = float(probs.get(AffectiveLabel.stress, probs.get("stress", probs.get("Angry", 0.0))))
+        p_sad = float(probs.get(AffectiveLabel.sad, probs.get("sad", probs.get("Sad", 0.0))))
+        p_hap = float(probs.get(AffectiveLabel.happy, probs.get("happy", probs.get("Happy", 0.0))))
+        p_rel = float(probs.get(AffectiveLabel.relaxed, probs.get("relaxed", probs.get("Calm", 0.0))))
+
+        cur_overwhelmed = float(np.clip(p_str, 0.0, 1.0))
+        cur_fatigue = float(np.clip(0.65 * p_sad + 0.25 * p_str, 0.0, 1.0))
+        cur_energy = float(np.clip(0.55 + 0.45 * p_hap + 0.15 * p_rel - 0.35 * p_sad - 0.25 * p_str, 0.0, 1.0))
+        cur_focus = float(np.clip(0.65 * p_rel + 0.30 * p_hap - 0.45 * p_str, 0.0, 1.0))
     else:  # stress_share may return 0 on empty history, which would wrongly mean "calm"
         stress_last = stress_mean7 = stress_trend = aff_conf = np.nan
+        cur_overwhelmed = cur_fatigue = cur_energy = cur_focus = np.nan
 
     w_ = req.workload
     return {
@@ -212,10 +227,10 @@ def request_features(req) -> dict:
         "energy_trend3": np.nan,
         "overwhelmed_mean3": np.nan,
         "overwhelmed_trend3": np.nan,
-        "current_fatigue": np.nan,
-        "current_focus": np.nan,
-        "current_energy": np.nan,
-        "current_overwhelmed": np.nan,
+        "current_fatigue": cur_fatigue,
+        "current_focus": cur_focus,
+        "current_energy": cur_energy,
+        "current_overwhelmed": cur_overwhelmed,
         "previous_fatigue": np.nan,
         "previous_focus": np.nan,
         "previous_energy": np.nan,
@@ -223,3 +238,4 @@ def request_features(req) -> dict:
         "bedtime_hour": 23.0,
         "next_wake_hour": 7.0,
     }
+

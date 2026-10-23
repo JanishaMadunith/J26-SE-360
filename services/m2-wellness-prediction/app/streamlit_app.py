@@ -21,7 +21,10 @@ from wellness_contracts import (  # noqa: E402
     ManualWellnessDay,
     ManualWellnessInputs,
     WellnessForecastRequest,
+    get_preset_history_scenarios,
+    map_m1_to_current_wellness,
 )
+
 
 
 st.set_page_config(
@@ -260,16 +263,119 @@ def main() -> None:
         else:
             st.info("Fallback model loaded")
 
-    with st.form("wellness-inputs"):
-        st.subheader("Previous days")
-        st.caption("Use the last three days to give the model recent context. Older days are optional.")
+    st.subheader("1. Previous Days (Historical Baseline Context)")
+    st.caption("M2 uses up to three previous days to establish baseline rhythms, sleep debt, and affective trends.")
+    history_mode = st.selectbox(
+        "Historical Context Selection",
+        [
+            "Preset: Balanced Normal Week",
+            "Preset: Exam / Crunch Week (High Stress)",
+            "Preset: Post-Weekend Recovery (Low Stress)",
+            "Custom: Enter All 3 Days Manually",
+        ],
+        index=0,
+        help="Choose a pre-calibrated past context or enter manual values.",
+    )
+    presets = get_preset_history_scenarios(forecast_date)
+    if history_mode.startswith("Preset:"):
+        scenario_key = history_mode.replace("Preset: ", "")
+        history = presets[scenario_key]
+        st.success(f"✅ Loaded 3 days of historical context for **{scenario_key}**.")
+        with st.expander("Inspect or customize past historical records"):
+            custom_hist = []
+            for offset in (3, 2, 1):
+                custom_hist.append(daily_inputs(f"Day {offset} ago", forecast_date - timedelta(days=offset)))
+            if st.checkbox("Use custom historical records above instead of preset"):
+                history = custom_hist
+    else:
         history = []
         for offset in (3, 2, 1):
             history.append(daily_inputs(f"Day {offset} ago", forecast_date - timedelta(days=offset)))
 
-        st.divider()
+    st.divider()
+    st.subheader("2. Current Day (M1 Multimodal Affective Assessment)")
+    st.caption("Current day affective state is fed directly by M1 (Keystroke Dynamics, Voice Model, Questionnaire Late Fusion).")
+
+    m1_source = st.radio(
+        "Current Day Affective Mode",
+        [
+            "M1 Detected: Stressed / Angry (Voice + Keystroke Jitter & Errors)",
+            "M1 Detected: Calm / Relaxed (Smooth typing cadence, steady acoustics)",
+            "M1 Detected: Happy (Energetic valence, brisk WPM)",
+            "M1 Detected: Sad / Sluggish (Prolonged key hold latency)",
+            "Manual Inputs",
+        ],
+        index=0,
+        horizontal=True,
+    )
+
+    if "Stressed" in m1_source:
+        fused_p = [0.05, 0.05, 0.05, 0.15, 0.70]
+        typing_m = {"wpm": 38, "hold_time": 85, "jitter": 65, "error_rate": 14}
+        st.info("🧠 **M1 Output:** Angry/Stress dominant (70%), rhythm jitter 65ms, backspace error rate 14%")
+        derived = map_m1_to_current_wellness(fused_p, typing_m)
+    elif "Calm" in m1_source:
+        fused_p = [0.15, 0.65, 0.15, 0.03, 0.02]
+        typing_m = {"wpm": 44, "hold_time": 80, "jitter": 28, "error_rate": 2}
+        st.info("🧠 **M1 Output:** Calm/Relaxed dominant (65%), rhythmic cadence (jitter 28ms), error rate 2%")
+        derived = map_m1_to_current_wellness(fused_p, typing_m)
+    elif "Happy" in m1_source:
+        fused_p = [0.10, 0.20, 0.60, 0.05, 0.05]
+        typing_m = {"wpm": 62, "hold_time": 72, "jitter": 30, "error_rate": 3}
+        st.info("🧠 **M1 Output:** Happy dominant (60%), brisk velocity (62 WPM), crisp key hold (72ms)")
+        derived = map_m1_to_current_wellness(fused_p, typing_m)
+    elif "Sad" in m1_source:
+        fused_p = [0.10, 0.10, 0.05, 0.65, 0.10]
+        typing_m = {"wpm": 26, "hold_time": 145, "jitter": 38, "error_rate": 6}
+        st.info("🧠 **M1 Output:** Sad/Fatigued dominant (65%), prolonged key hold (145ms), sluggish velocity (26 WPM)")
+        derived = map_m1_to_current_wellness(fused_p, typing_m)
+    else:
+        derived = None
+
+    if derived is not None:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("##### Lifestyle & Workload")
+            cur_sleep = st.number_input("Sleep (hours)", min_value=0.0, max_value=16.0, value=7.0, step=0.5, key="m2-c-sleep")
+            cur_wake = st.number_input("Wake-up time", min_value=0.0, max_value=23.99, value=7.0, step=0.25, key="m2-c-wake")
+            cur_steps = st.number_input("Steps today", min_value=0, max_value=50000, value=6000, step=500, key="m2-c-steps")
+            cur_due = st.number_input("Tasks due in 24 hours", min_value=0, max_value=100, value=2, step=1, key="m2-c-due")
+            cur_min = st.number_input("Work minutes due", min_value=0, max_value=2000, value=120, step=15, key="m2-c-min")
+            cur_overdue = st.number_input("Overdue tasks", min_value=0, max_value=100, value=0, step=1, key="m2-c-overdue")
+            cur_pending = st.number_input("Pending tasks", min_value=0, max_value=100, value=2, step=1, key="m2-c-pending")
+            cur_bedtime = st.number_input("Expected bedtime", min_value=0.0, max_value=23.99, value=23.0, step=0.25, key="m2-c-bedtime")
+            cur_nextwake = st.number_input("Expected next wake time", min_value=0.0, max_value=23.99, value=7.0, step=0.25, key="m2-c-nextwake")
+        with c2:
+            st.markdown("##### Affective State (Derived from M1)")
+            stress = st.slider("Stress", 0.0, 1.0, value=derived["stress"], key="m2-c-stress")
+            mental_tiredness = st.slider("Mental Tiredness (Fatigue)", 0.0, 1.0, value=derived["mental_tiredness"], key="m2-c-tiredness")
+            energy = st.slider("Energy", 0.0, 1.0, value=derived["energy"], key="m2-c-energy")
+            focus = st.slider("Focus", 0.0, 1.0, value=derived["focus"], key="m2-c-focus")
+            overwhelmed = st.slider("Overwhelmed Score", 0.0, 1.0, value=derived["overwhelmed"], key="m2-c-overwhelmed")
+
+        current = ManualWellnessDay(
+            date=forecast_date,
+            sleep_hours=cur_sleep,
+            wake_hour=cur_wake,
+            steps=cur_steps,
+            stress=stress,
+            mental_tiredness=mental_tiredness,
+            focus=focus,
+            energy=energy,
+            overwhelmed=overwhelmed,
+            bedtime_hour=cur_bedtime,
+            next_wake_hour=cur_nextwake,
+            tasks_due_24h=cur_due,
+            minutes_due_24h=cur_min,
+            tasks_overdue=cur_overdue,
+            tasks_pending=cur_pending,
+        )
+    else:
         current = daily_inputs("Current day", forecast_date)
-        submitted = st.form_submit_button("Calculate wellness forecast", type="primary", use_container_width=True)
+
+    st.divider()
+    submitted = st.button("🚀 Calculate Wellness Forecast", type="primary", use_container_width=True)
+
 
     if submitted:
         try:

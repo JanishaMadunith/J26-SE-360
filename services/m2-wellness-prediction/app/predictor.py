@@ -66,12 +66,13 @@ class Predictor:
 
         rows = []
         previous = {
-            "previous_fatigue": rf["current_fatigue"],
-            "previous_focus": rf["current_focus"],
-            "previous_energy": rf["current_energy"],
-            "previous_burnout": rf["current_overwhelmed"],
+            "previous_fatigue": float(rf["current_fatigue"]) if np.isfinite(rf["current_fatigue"]) else 0.30,
+            "previous_focus": float(rf["current_focus"]) if np.isfinite(rf["current_focus"]) else 0.50,
+            "previous_energy": float(rf["current_energy"]) if np.isfinite(rf["current_energy"]) else 0.50,
+            "previous_burnout": float(rf["current_overwhelmed"]) if np.isfinite(rf["current_overwhelmed"]) else 0.20,
             "_was_sleeping": False,
         }
+
         asof_hour = local.hour + local.minute / 60
         for t in times:
             offset_h = max(0.0, (t - now).total_seconds() / 3600)
