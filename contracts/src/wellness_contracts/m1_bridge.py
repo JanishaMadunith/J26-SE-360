@@ -83,12 +83,12 @@ def map_m1_to_current_wellness(
         )
     )
 
-    # 4. Focus: High with Calm rhythm & Happy, degraded by Angry, high jitter, and error corrections
+    # 4. Focus: Internal baseline for M2 feature models
     focus = float(
         np.clip(
-            0.65 * p_calm + 0.30 * p_happy + 0.10 * p_neutral - 0.40 * p_angry - typing_distraction,
-            0.0,
-            1.0,
+            0.55 + 0.30 * p_calm + 0.15 * p_happy - 0.25 * p_angry - 0.20 * typing_distraction,
+            0.15,
+            0.95,
         )
     )
 
