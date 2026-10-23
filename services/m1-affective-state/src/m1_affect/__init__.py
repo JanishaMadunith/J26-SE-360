@@ -892,7 +892,7 @@ with tab_m1:
 with tab_m2:
     st.subheader("📈 M2 — Cognitive Wellness Forecast (Driven by M1)")
     st.caption(
-        "Forecasts your 24-hour hour-by-hour cognitive wellness trajectory (Mental Fatigue, Focus, Energy, Burnout Risk). "
+        "Forecasts your 24-hour hour-by-hour cognitive wellness trajectory (Mental Fatigue, Energy, Burnout Risk). "
         "The **Current Day** is driven by your **M1 Multimodal Affective State**, while previous days provide the **historical baseline context**."
     )
 
@@ -940,12 +940,11 @@ with tab_m2:
         derived_wellness = map_m1_to_current_wellness(fused_probs, current_typing)
 
         st.markdown("##### 📌 Current Day Affective Inputs (Mapped from M1):")
-        c_cols = st.columns(5)
+        c_cols = st.columns(4)
         c_cols[0].metric("Stress", f"{derived_wellness['stress']:.0%}")
         c_cols[1].metric("Overwhelmed", f"{derived_wellness['overwhelmed']:.0%}")
         c_cols[2].metric("Mental Tiredness", f"{derived_wellness['mental_tiredness']:.0%}")
         c_cols[3].metric("Energy", f"{derived_wellness['energy']:.0%}")
-        c_cols[4].metric("Focus", f"{derived_wellness['focus']:.0%}")
 
         st.markdown("##### 📅 Historical Baseline Scenario (Days -3 to -1):")
         scenario_name = st.selectbox(
@@ -1011,24 +1010,22 @@ with tab_m2:
 
             st.markdown("##### 🔮 M2 Wellness Outlook (Coming 24 Hours):")
             s0 = forecast.slots[0]
-            f_cols = st.columns(4)
+            f_cols = st.columns(3)
             f_cols[0].metric("Energy", f"{s0.energy:.0%}", "Higher is better")
-            f_cols[1].metric("Focus", f"{s0.focus:.0%}", "Higher is better")
-            f_cols[2].metric("Mental Fatigue", f"{s0.mental_fatigue:.0%}", "Lower is better")
-            f_cols[3].metric("Burnout Risk", f"{s0.burnout_risk:.0%}", "Lower is better")
+            f_cols[1].metric("Mental Fatigue", f"{s0.mental_fatigue:.0%}", "Lower is better")
+            f_cols[2].metric("Burnout Risk", f"{s0.burnout_risk:.0%}", "Lower is better")
 
             chart_rows = [
                 {
                     "Time": s.start.strftime("%H:%M"),
                     "Energy": s.energy,
-                    "Focus": s.focus,
                     "Mental Fatigue": s.mental_fatigue,
                     "Burnout Risk": s.burnout_risk,
                 }
                 for s in forecast.slots
             ]
             chart_df = pd.DataFrame(chart_rows).set_index("Time")
-            st.line_chart(chart_df, y=["Energy", "Focus", "Mental Fatigue", "Burnout Risk"])
+            st.line_chart(chart_df, y=["Energy", "Mental Fatigue", "Burnout Risk"])
 
             with st.expander("View Full 24-Hour Slot Forecast Table"):
                 display_df = chart_df.copy()
