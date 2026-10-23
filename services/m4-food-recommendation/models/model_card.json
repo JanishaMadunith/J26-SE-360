@@ -4,7 +4,7 @@
   "architecture": "LightGCN (2-layer graph convolution)",
   "embedding_dim": 32,
   "loss_function": "Bayesian Personalized Ranking (BPR)",
-  "num_nodes": 72,
-  "training_time_sec": 0.12,
+  "num_nodes": 102,
+  "training_time_sec": 0.11,
   "target_task": "Predicts user context-food-nutrient compatibility ranking"
 }

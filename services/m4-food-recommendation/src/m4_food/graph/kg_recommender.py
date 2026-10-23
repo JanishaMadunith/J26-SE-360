@@ -5,20 +5,25 @@ from __future__ import annotations
 import networkx as nx
 try:
     from .gnn_ranker import GNNRecommenderRanker
+    from .kg_service import KnowledgeGraphService
     from .knowledge_base import create_default_knowledge_graph
     from .schema import NodeType, RawUserContext, RelationType
 except ImportError:
     from gnn_ranker import GNNRecommenderRanker
+    from kg_service import KnowledgeGraphService
     from knowledge_base import create_default_knowledge_graph
     from schema import NodeType, RawUserContext, RelationType
+from wellness_contracts import DietProfile
 
 
 class KnowledgeGraphRecommender:
     """Core recommendation engine operating on the domain Knowledge Graph and GNN."""
 
-    def __init__(self, graph: nx.DiGraph | None = None, enable_gnn: bool = True):
-        self.g = graph if graph is not None else create_default_knowledge_graph()
+    def __init__(self, graph: nx.DiGraph | None = None, enable_gnn: bool = True, use_heuristic_weights: bool = False):
+        self.use_heuristic_weights = use_heuristic_weights
+        self.g = graph if graph is not None else create_default_knowledge_graph(use_heuristic_weights=use_heuristic_weights)
         self.gnn = GNNRecommenderRanker() if enable_gnn else None
+        self.service = KnowledgeGraphService(foods_list=None, enable_gnn=enable_gnn)
 
     def _extract_active_states(self, ctx: RawUserContext) -> list[str]:
         """Maps raw user signals (affective + cognitive) to KG state node IDs."""
@@ -44,44 +49,39 @@ class KnowledgeGraphRecommender:
         return list(dict.fromkeys(active))
 
     def _is_food_safe(self, food_id: str, ctx: RawUserContext) -> tuple[bool, str]:
-        """Applies hard constraints (allergens, dietary restrictions, medical conditions)."""
-        # 1. Allergens Check
-        for _, tail, data in self.g.out_edges(food_id, data=True):
-            if data.get("relation") == RelationType.HAS_ALLERGEN:
-                allergen_name = tail.replace("allergen:", "").lower()
-                for user_all in ctx.allergies:
-                    if user_all.lower() in allergen_name or allergen_name in user_all.lower():
-                        return False, f"Contains allergen: {allergen_name}"
+        """Applies unified deterministic safety constraints using canonical KnowledgeGraphService logic."""
+        node_data = self.g.nodes[food_id].get("node")
+        food_name = node_data.name if node_data else food_id.replace("food:", "").replace("_", " ")
+        food = self.service.foods_by_name.get(food_name)
+        if not food:
+            return False, "Food metadata not found in catalog"
 
-        # 2. Dietary Preferences (Vegan / Vegetarian / Halal)
-        if ctx.is_vegan:
-            if not self.g.has_edge(food_id, "diet:vegan"):
-                return False, "Not certified vegan"
-        if ctx.is_vegetarian:
-            if not self.g.has_edge(food_id, "diet:vegetarian"):
-                return False, "Not vegetarian"
-        if ctx.is_halal:
-            if not self.g.has_edge(food_id, "diet:halal"):
-                return False, "Not halal"
-
-        # 3. Medical / Health Condition Contraindications
-        for cond in ctx.health_conditions:
-            cond_node = f"condition:{cond.lower()}"
-            if self.g.has_node(cond_node):
-                # Check if any nutrient contained in this food is contraindicated for this condition
-                for _, nutrient_id, n_data in self.g.out_edges(food_id, data=True):
-                    if n_data.get("relation") == RelationType.CONTAINS:
-                        if self.g.has_edge(nutrient_id, cond_node):
-                            edge_info = self.g.get_edge_data(nutrient_id, cond_node)
-                            return False, f"Contraindicated for {cond}: {edge_info.get('explanation')}"
-
+        prof = DietProfile(
+            vegetarian=ctx.is_vegetarian,
+            vegan=ctx.is_vegan,
+            halal=ctx.is_halal,
+            allergies=list(ctx.allergies),
+            dislikes=list(ctx.dislikes),
+            health_conditions=list(ctx.health_conditions),
+            daily_calorie_target=ctx.daily_calorie_target,
+        )
+        is_safe = self.service.is_safe_kg(food, prof)
+        if not is_safe:
+            return False, "Failed safety / dietary constraint filter"
         return True, "Safe"
 
     def recommend(
-        self, ctx: RawUserContext, top_k_foods: int = 3, top_k_tasks: int = 2
+        self, ctx: RawUserContext, top_k_foods: int = 3, top_k_tasks: int = 2, mode: str = "model_c"
     ) -> dict:
-        """Generates context-aware, KG-reasoned food and task recommendations from raw user input."""
-        active_states = self._extract_active_states(ctx)
+        """Generates context-aware, KG-reasoned food and task recommendations from raw user input.
+        
+        Ablation Modes:
+            - 'model_a': Content-based baseline without dynamic affective/cognitive context.
+            - 'model_b': Pure LightGCN embedding ranking without symbolic KG paths.
+            - 'model_c': Neuro-symbolic hybrid (LightGCN + KG with EQUAL 1.0 weights baseline) [Default].
+            - 'model_d': Neuro-symbolic hybrid (LightGCN + KG with evidence-tier weights 0.70-0.95).
+        """
+        active_states = self._extract_active_states(ctx) if mode != "model_a" else []
 
         # ---------------------------------------------------------------------
         # 1. FOOD RECOMMENDATIONS VIA KG PATH TRAVERSAL
@@ -97,7 +97,7 @@ class KnowledgeGraphRecommender:
             if ctx.meal_type and ctx.meal_type.lower() not in [m.lower() for m in props.get("meals", [])]:
                 continue
 
-            # Hard safety pruning
+            # Deterministic Early Safety Pruning (Allergen & Contraindication CSP)
             safe, reason = self._is_food_safe(nid, ctx)
             if not safe:
                 continue
@@ -106,20 +106,26 @@ class KnowledgeGraphRecommender:
             path_score = 0.0
             reasons = []
 
-            for _, nutrient_id, n_edge in self.g.out_edges(nid, data=True):
-                if n_edge.get("relation") != RelationType.CONTAINS:
-                    continue
+            if mode in ("model_c", "model_d"):
+                for _, nutrient_id, n_edge in self.g.out_edges(nid, data=True):
+                    if n_edge.get("relation") != RelationType.CONTAINS:
+                        continue
 
-                nutrient_node = self.g.nodes[nutrient_id]["node"]
+                    nutrient_node = self.g.nodes[nutrient_id]["node"]
 
-                for state_id in active_states:
-                    if self.g.has_edge(nutrient_id, state_id):
-                        s_edge = self.g.get_edge_data(nutrient_id, state_id)
-                        w = float(n_edge.get("weight", 1.0)) * float(s_edge.get("weight", 1.0))
-                        path_score += w
-                        reasons.append(
-                            f"Contains {nutrient_node.name} which {s_edge.get('explanation', 'supports this state')}."
-                        )
+                    for state_id in active_states:
+                        if self.g.has_edge(nutrient_id, state_id):
+                            s_edge = self.g.get_edge_data(nutrient_id, state_id)
+                            # Mode D uses heuristic_tier_weight if present, Mode C uses baseline 1.0
+                            if mode == "model_d" and "heuristic_tier_weight" in s_edge:
+                                s_w = float(s_edge.get("heuristic_tier_weight", 1.0))
+                            else:
+                                s_w = float(s_edge.get("weight", 1.0))
+                            w = float(n_edge.get("weight", 1.0)) * s_w
+                            path_score += w
+                            reasons.append(
+                                f"Contains {nutrient_node.name} which {s_edge.get('explanation', 'supports this state')}."
+                            )
 
             # Preparation Time Adaptation
             prep_min = props.get("prep_minutes", 15)
@@ -134,7 +140,7 @@ class KnowledgeGraphRecommender:
 
             # GNN Learned Representation Score
             gnn_score = 0.0
-            if self.gnn is not None and self.gnn.is_loaded and self.gnn.final_embeddings is not None:
+            if mode != "model_a" and self.gnn is not None and self.gnn.is_loaded and self.gnn.final_embeddings is not None:
                 f_idx = self.gnn.node_to_idx.get(nid)
                 if f_idx is not None:
                     for state_id in active_states:
@@ -142,7 +148,15 @@ class KnowledgeGraphRecommender:
                         if s_idx is not None:
                             gnn_score += self.gnn.model.score(self.gnn.final_embeddings, s_idx, f_idx)
 
-            final_food_score = path_score + 0.4 * gnn_score - time_fit_penalty - cal_penalty
+            if mode == "model_a":
+                # Content-based only: baseline meal suitability + calorie match
+                final_food_score = 1.0 - time_fit_penalty - cal_penalty
+            elif mode == "model_b":
+                # LightGCN only: pure embedding dot product
+                final_food_score = gnn_score - time_fit_penalty - cal_penalty
+            else:
+                # Mode C and Mode D: Hybrid fusion
+                final_food_score = path_score + 0.4 * gnn_score - time_fit_penalty - cal_penalty
 
             # Combine explanations (deduplicated)
             unique_reasons = list(dict.fromkeys(reasons))

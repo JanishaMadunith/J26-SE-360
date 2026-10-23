@@ -1,0 +1,1777 @@
+[
+  {
+    "name": "A Bit Different  Breakfast Pizza",
+    "portion": "1 serving (30 min prep)",
+    "calories": 173,
+    "meals": [
+      "breakfast",
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "prepared pizza crust",
+      "sausage patty",
+      "eggs",
+      "milk",
+      "salt and pepper"
+    ]
+  },
+  {
+    "name": "Alouette  Potatoes",
+    "portion": "1 serving (45 min prep)",
+    "calories": 368,
+    "meals": [
+      "breakfast"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "tryptophan",
+      "complex-carb"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "spreadable cheese with garlic and herbs",
+      "new potatoes",
+      "shallots",
+      "parsley",
+      "tarragon"
+    ]
+  },
+  {
+    "name": "Aww  Marinated Olives",
+    "portion": "1 serving (15 min prep)",
+    "calories": 381,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": true,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "fennel seeds",
+      "green olives",
+      "ripe olives",
+      "garlic",
+      "peppercorn"
+    ]
+  },
+  {
+    "name": "Berry  Good Sandwich Spread",
+    "portion": "1 serving (5 min prep)",
+    "calories": 79,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "whole berry cranberry sauce",
+      "sour cream",
+      "prepared horseradish"
+    ]
+  },
+  {
+    "name": "Chile Rellenos",
+    "portion": "1 serving (45 min prep)",
+    "calories": 94,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "egg roll wrap",
+      "whole green chilies",
+      "cheese",
+      "cornstarch",
+      "oil"
+    ]
+  },
+  {
+    "name": "Chinese  Candy",
+    "portion": "1 serving (15 min prep)",
+    "calories": 233,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "peanut"
+    ],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "butterscotch chips",
+      "chinese noodles",
+      "salted peanuts"
+    ]
+  },
+  {
+    "name": "Cream  Of Spinach Soup",
+    "portion": "1 serving (45 min prep)",
+    "calories": 126,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "magnesium",
+      "antioxidants"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "water",
+      "salt",
+      "boiling potatoes",
+      "fresh spinach leaves",
+      "unsalted butter"
+    ]
+  },
+  {
+    "name": "Cream  Of Spinach Soup  Vegan",
+    "portion": "1 serving (55 min prep)",
+    "calories": 65,
+    "meals": [
+      "breakfast",
+      "lunch",
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": true,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "magnesium",
+      "complex-carb",
+      "antioxidants",
+      "tryptophan",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "onion",
+      "scallion",
+      "apple juice",
+      "olive oil",
+      "spinach"
+    ]
+  },
+  {
+    "name": "Crispy Crunchy  Chicken",
+    "portion": "1 serving (35 min prep)",
+    "calories": 336,
+    "meals": [
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "boneless skinless chicken breast halves",
+      "condensed cream of chicken soup",
+      "egg",
+      "seasoning salt",
+      "all-purpose flour"
+    ]
+  },
+  {
+    "name": "Emotional Balance  Spice Mixture",
+    "portion": "1 serving (10 min prep)",
+    "calories": 183,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground black pepper",
+      "ground ginger",
+      "ground coriander",
+      "ground cumin",
+      "ground turmeric"
+    ]
+  },
+  {
+    "name": "Fool The Meat Eaters  Chili",
+    "portion": "1 serving (40 min prep)",
+    "calories": 296,
+    "meals": [
+      "lunch",
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": true,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "magnesium",
+      "complex-carb",
+      "high-protein",
+      "antioxidants",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "vegetarian ground beef",
+      "garlic",
+      "onion",
+      "jalapenos",
+      "green pepper"
+    ]
+  },
+  {
+    "name": "Fried  Potatoes",
+    "portion": "1 serving (40 min prep)",
+    "calories": 133,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "red potatoes",
+      "margarine",
+      "rosemary"
+    ]
+  },
+  {
+    "name": "Global Gourmet  Taco Casserole",
+    "portion": "1 serving (55 min prep)",
+    "calories": 457,
+    "meals": [
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground beef",
+      "onion",
+      "tomato sauce",
+      "taco sauce",
+      "salt"
+    ]
+  },
+  {
+    "name": "Grilled  Venison Burgers",
+    "portion": "1 serving (26 min prep)",
+    "calories": 191,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground venison",
+      "egg substitute",
+      "non-fat powdered milk",
+      "water",
+      "fresh breadcrumb"
+    ]
+  },
+  {
+    "name": "Healthy For Them  Yogurt Popsicles",
+    "portion": "1 serving (10 min prep)",
+    "calories": 165,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "milk",
+      "frozen juice concentrate",
+      "plain yogurt"
+    ]
+  },
+  {
+    "name": "Homemade  Vegetable Soup From A Can",
+    "portion": "1 serving (12 min prep)",
+    "calories": 276,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "magnesium",
+      "complex-carb",
+      "high-protein",
+      "antioxidants",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "low sodium chicken broth",
+      "diced tomatoes",
+      "zucchini",
+      "corn",
+      "potatoes"
+    ]
+  },
+  {
+    "name": "How I Got My Family To Eat Spinach  Spinach Casserole",
+    "portion": "1 serving (50 min prep)",
+    "calories": 166,
+    "meals": [
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "magnesium",
+      "antioxidants",
+      "tryptophan",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen chopped spinach",
+      "egg",
+      "salt",
+      "black pepper",
+      "onion"
+    ]
+  },
+  {
+    "name": "I Can T Believe It S Spinach",
+    "portion": "1 serving (30 min prep)",
+    "calories": 54,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "gluten",
+      "egg"
+    ],
+    "nutrients": [
+      "magnesium",
+      "high-protein",
+      "antioxidants",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen chopped spinach",
+      "eggs",
+      "garlic powder",
+      "soft breadcrumbs",
+      "oregano"
+    ]
+  },
+  {
+    "name": "I Don T Feel Like Cooking Tonight  Casserole",
+    "portion": "1 serving (45 min prep)",
+    "calories": 648,
+    "meals": [
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground beef",
+      "onion",
+      "frozen vegetables",
+      "cream of mushroom soup",
+      "condensed cream of mushroom & garlic soup"
+    ]
+  },
+  {
+    "name": "I Stole The Idea From Mirj  Sesame Noodles",
+    "portion": "1 serving (18 min prep)",
+    "calories": 783,
+    "meals": [
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "soy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "angel hair pasta",
+      "toasted sesame oil",
+      "soy sauce",
+      "honey",
+      "garlic"
+    ]
+  },
+  {
+    "name": "I Yam What I Yam Two  Muffins",
+    "portion": "1 serving (35 min prep)",
+    "calories": 173,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg",
+      "nuts"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "all-purpose flour",
+      "buckwheat flour",
+      "unsweetened cocoa",
+      "baking powder",
+      "baking soda"
+    ]
+  },
+  {
+    "name": "I Yam What I Yam  Muffins",
+    "portion": "1 serving (45 min prep)",
+    "calories": 172,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "all-purpose flour",
+      "buckwheat flour",
+      "unsweetened cocoa",
+      "baking powder",
+      "baking soda"
+    ]
+  },
+  {
+    "name": "Immoral  Sandwich Filling  Loose Meat",
+    "portion": "1 serving (35 min prep)",
+    "calories": 223,
+    "meals": [
+      "lunch",
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground beef",
+      "sugar",
+      "prepared yellow mustard",
+      "beer",
+      "cayenne"
+    ]
+  },
+  {
+    "name": "Italian Sandwich  Pasta Salad",
+    "portion": "1 serving (25 min prep)",
+    "calories": 279,
+    "meals": [
+      "lunch",
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "antioxidants",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "tri-color spiral pasta",
+      "dill pickles",
+      "ripe olives",
+      "green onion",
+      "chives"
+    ]
+  },
+  {
+    "name": "Italian  Fries",
+    "portion": "1 serving (15 min prep)",
+    "calories": 241,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "tryptophan",
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen french fries",
+      "oil",
+      "salt & freshly ground black pepper",
+      "parmesan cheese",
+      "oregano"
+    ]
+  },
+  {
+    "name": "Italian  Gut Busters",
+    "portion": "1 serving (45 min prep)",
+    "calories": 817,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "sandwich bun",
+      "good seasonings italian salad dressing mix",
+      "butter",
+      "deli turkey",
+      "ham"
+    ]
+  },
+  {
+    "name": "Jiffy  Extra Moist Carrot Cake",
+    "portion": "1 serving (50 min prep)",
+    "calories": 612,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "egg",
+      "nuts",
+      "coconut"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "yellow cake mix",
+      "vanilla instant pudding mix",
+      "nutmeg",
+      "cinnamon",
+      "eggs"
+    ]
+  },
+  {
+    "name": "Jiffy  Roasted Corn And Jalapeno Cornbread",
+    "portion": "1 serving (35 min prep)",
+    "calories": 400,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "tryptophan",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "whole kernel corn",
+      "onion",
+      "red bell pepper",
+      "butter",
+      "jiffy corn muffin mix"
+    ]
+  },
+  {
+    "name": "Land Of Nod  Cinnamon Buns",
+    "portion": "1 serving (35 min prep)",
+    "calories": 575,
+    "meals": [
+      "breakfast"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "rolls",
+      "brown sugar",
+      "instant vanilla pudding",
+      "cinnamon",
+      "raisins"
+    ]
+  },
+  {
+    "name": "Make That Chicken Dance  Salsa Pasta",
+    "portion": "1 serving (30 min prep)",
+    "calories": 255,
+    "meals": [
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "antioxidants",
+      "tryptophan",
+      "high-sugar"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "tomatoes",
+      "garlic",
+      "onion",
+      "button mushrooms",
+      "hot sauce"
+    ]
+  },
+  {
+    "name": "Mennonite  Corn Fritters",
+    "portion": "1 serving (15 min prep)",
+    "calories": 67,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "fresh corn",
+      "eggs",
+      "flour",
+      "salt",
+      "pepper"
+    ]
+  },
+  {
+    "name": "Mexican Pasta",
+    "portion": "1 serving (25 min prep)",
+    "calories": 325,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "tryptophan",
+      "high-protein",
+      "high-sodium",
+      "complex-carb"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "fettuccine pasta",
+      "cheddar cheese soup",
+      "milk",
+      "picante sauce",
+      "black olives"
+    ]
+  },
+  {
+    "name": "Mock A Mole   Low Fat Guacamole",
+    "portion": "1 serving (15 min prep)",
+    "calories": 116,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": true,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "magnesium",
+      "antioxidants"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen peas",
+      "hass avocado",
+      "salt",
+      "lemons, juice of",
+      "tomatoes"
+    ]
+  },
+  {
+    "name": "My Muffuletta Sandwich",
+    "portion": "1 serving (20 min prep)",
+    "calories": 181,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "antioxidants",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ciabatta",
+      "provolone cheese",
+      "genoa salami",
+      "ham",
+      "tomatoes"
+    ]
+  },
+  {
+    "name": "Open Sesame  Noodles",
+    "portion": "1 serving (28 min prep)",
+    "calories": 618,
+    "meals": [
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "soy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "antioxidants",
+      "tryptophan",
+      "complex-carb"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "vermicelli",
+      "rice vinegar",
+      "reduced sodium soy sauce",
+      "vegetable oil",
+      "fresh ginger"
+    ]
+  },
+  {
+    "name": "Philly  Waldorf Salad",
+    "portion": "1 serving (60 min prep)",
+    "calories": 181,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "nuts"
+    ],
+    "nutrients": [
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "philadelphia cream cheese",
+      "orange juice",
+      "orange rind",
+      "sugar",
+      "apples"
+    ]
+  },
+  {
+    "name": "Pick Me Up  Party Chicken Kabobs",
+    "portion": "1 serving (30 min prep)",
+    "calories": 214,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "boneless chicken breast",
+      "garlic",
+      "salt",
+      "cumin",
+      "paprika"
+    ]
+  },
+  {
+    "name": "Pizza  Stuffed Potato",
+    "portion": "1 serving (25 min prep)",
+    "calories": 183,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "tryptophan",
+      "low-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "baking potato",
+      "mozzarella cheese",
+      "tomato sauce",
+      "part-skim ricotta cheese",
+      "oregano leaves"
+    ]
+  },
+  {
+    "name": "Rich  Hot Fudge Cake",
+    "portion": "1 serving (45 min prep)",
+    "calories": 580,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "flour",
+      "sugar",
+      "cocoa",
+      "baking powder",
+      "salt"
+    ]
+  },
+  {
+    "name": "Rise And Shine  German Fruit Pancake",
+    "portion": "1 serving (45 min prep)",
+    "calories": 253,
+    "meals": [
+      "breakfast",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg",
+      "nuts"
+    ],
+    "nutrients": [
+      "magnesium",
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "eggs",
+      "flour",
+      "milk",
+      "salt",
+      "butter"
+    ]
+  },
+  {
+    "name": "Say What   Banana Sandwich",
+    "portion": "1 serving (5 min prep)",
+    "calories": 238,
+    "meals": [
+      "breakfast",
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "egg"
+    ],
+    "nutrients": [
+      "magnesium",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "white bread",
+      "mayonnaise",
+      "bananas"
+    ]
+  },
+  {
+    "name": "Steamed  Chicken Cutlets In Packages",
+    "portion": "1 serving (35 min prep)",
+    "calories": 190,
+    "meals": [
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "high-protein",
+      "antioxidants",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "boneless skinless chicken breast",
+      "tomatoes",
+      "dried basil",
+      "olive oil",
+      "lime juice"
+    ]
+  },
+  {
+    "name": "Sugared Grapes",
+    "portion": "1 serving (15 min prep)",
+    "calories": 140,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "egg"
+    ],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "green grape",
+      "egg whites",
+      "sugar"
+    ]
+  },
+  {
+    "name": "The Elvis  Smoothie",
+    "portion": "1 serving (2 min prep)",
+    "calories": 354,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "peanut"
+    ],
+    "nutrients": [
+      "magnesium",
+      "high-protein",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "banana",
+      "natural-style peanut butter",
+      "2% low-fat milk",
+      "sugar-free non-fat vanilla yogurt"
+    ]
+  },
+  {
+    "name": "The Man S  Taco Dip",
+    "portion": "1 serving (40 min prep)",
+    "calories": 185,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "cream cheese",
+      "sour cream",
+      "taco seasoning",
+      "bean dip",
+      "cheddar cheese"
+    ]
+  },
+  {
+    "name": "The Woiks  Dilly Burgers",
+    "portion": "1 serving (32 min prep)",
+    "calories": 449,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "antioxidants",
+      "tryptophan",
+      "high-protein"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "mccormick's montreal brand steak seasoning",
+      "dill weed",
+      "no-salt-added ketchup",
+      "ground sirloin",
+      "bacon"
+    ]
+  },
+  {
+    "name": "To Your Health  Muffins",
+    "portion": "1 serving (40 min prep)",
+    "calories": 159,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "complex-carb",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "whole wheat flour",
+      "natural bran",
+      "brown sugar",
+      "baking soda",
+      "salt"
+    ]
+  },
+  {
+    "name": "Truth Serum  Margaritas",
+    "portion": "1 serving (30 min prep)",
+    "calories": 72,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "limeade",
+      "lime juice",
+      "tequila",
+      "triple sec",
+      "lime wedge"
+    ]
+  },
+  {
+    "name": "Turtle  Squares",
+    "portion": "1 serving (30 min prep)",
+    "calories": 172,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "nuts"
+    ],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "flour",
+      "brown sugar",
+      "butter",
+      "pecans",
+      "semi-sweet chocolate chips"
+    ]
+  },
+  {
+    "name": "Twisted American Chop Suey",
+    "portion": "1 serving (60 min prep)",
+    "calories": 650,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-sodium",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "ground beef",
+      "tomato soup",
+      "cappelletti pasta",
+      "mushrooms",
+      "milk"
+    ]
+  },
+  {
+    "name": "Zupa Ze Swiezych Grzybow  Polish Mushroom Soup",
+    "portion": "1 serving (40 min prep)",
+    "calories": 177,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy"
+    ],
+    "nutrients": [
+      "high-protein"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "wild mushrooms",
+      "onions",
+      "butter",
+      "lemon, juice of",
+      "water"
+    ]
+  },
+  {
+    "name": "1 Asian Noodle Salad",
+    "portion": "1 serving (26 min prep)",
+    "calories": 231,
+    "meals": [
+      "breakfast",
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "gluten",
+      "soy"
+    ],
+    "nutrients": [
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "rice noodles",
+      "carrot",
+      "english cucumber",
+      "green onions",
+      "bean sprouts"
+    ]
+  },
+  {
+    "name": "1 Brownies In The World    Best Ever",
+    "portion": "1 serving (40 min prep)",
+    "calories": 138,
+    "meals": [
+      "lunch",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "bittersweet chocolate",
+      "unsalted butter",
+      "eggs",
+      "granulated sugar",
+      "unsweetened cocoa powder"
+    ]
+  },
+  {
+    "name": "1 Easiest Dr  Pepper Ham Glaze Ever",
+    "portion": "1 serving (13 min prep)",
+    "calories": 90,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [],
+    "nutrients": [
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "dr. pepper cola",
+      "orange marmalade",
+      "brown sugar"
+    ]
+  },
+  {
+    "name": "1 Favorite Chinese Steamed Whole Fish By Sy",
+    "portion": "1 serving (45 min prep)",
+    "calories": 265,
+    "meals": [
+      "dinner",
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "fish",
+      "peanut",
+      "soy"
+    ],
+    "nutrients": [
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "fish",
+      "scallions",
+      "rice wine",
+      "peanut oil",
+      "sesame oil"
+    ]
+  },
+  {
+    "name": "1 In Canada Chocolate Chip Cookies",
+    "portion": "1 serving (45 min prep)",
+    "calories": 595,
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "egg"
+    ],
+    "nutrients": [
+      "complex-carb",
+      "high-protein",
+      "tryptophan",
+      "high-sugar",
+      "high-GI"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "white sugar",
+      "brown sugar",
+      "salt",
+      "margarine",
+      "eggs"
+    ]
+  },
+  {
+    "name": "1 Squash Dressing",
+    "portion": "1 serving (50 min prep)",
+    "calories": 158,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "squash",
+      "cornbread",
+      "eggs",
+      "onion",
+      "butter"
+    ]
+  },
+  {
+    "name": "412 Broccoli Casserole",
+    "portion": "1 serving (40 min prep)",
+    "calories": 195,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": false,
+      "vegan": false,
+      "halal": true
+    },
+    "allergens": [
+      "dairy",
+      "soy"
+    ],
+    "nutrients": [
+      "high-protein",
+      "antioxidants",
+      "tryptophan",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen broccoli cuts",
+      "cream of chicken soup",
+      "sharp cheddar cheese",
+      "garlic powder",
+      "ground black pepper"
+    ]
+  },
+  {
+    "name": "1 000 Artichoke Hearts",
+    "portion": "1 serving (25 min prep)",
+    "calories": 422,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "gluten",
+      "dairy",
+      "egg"
+    ],
+    "nutrients": [
+      "high-protein",
+      "high-sodium"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "artichoke hearts",
+      "egg",
+      "unseasoned breadcrumbs",
+      "oil",
+      "unsalted butter"
+    ]
+  },
+  {
+    "name": "100 Broccoli Casserole",
+    "portion": "1 serving (50 min prep)",
+    "calories": 212,
+    "meals": [
+      "snack"
+    ],
+    "diet_tags": {
+      "vegetarian": true,
+      "vegan": false,
+      "halal": false
+    },
+    "allergens": [
+      "dairy"
+    ],
+    "nutrients": [
+      "antioxidants",
+      "tryptophan"
+    ],
+    "source": "Food.com",
+    "ingredients_sample": [
+      "frozen broccoli",
+      "cream cheese",
+      "dry onion soup mix",
+      "sour cream",
+      "water chestnuts"
+    ]
+  }
+]

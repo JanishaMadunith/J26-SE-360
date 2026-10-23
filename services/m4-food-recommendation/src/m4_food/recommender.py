@@ -47,7 +47,7 @@ REASONS = {
     "magnesium": "a good source of magnesium, often low during stress",
     "complex-carb": "complex carbohydrates give steady energy",
     "high-protein": "protein helps keep energy and focus stable",
-    "low-GI": "low glycaemic index avoids energy crashes",
+    "low-GI": "low glycaemic index supports gradual carbohydrate absorption",
 }
 
 

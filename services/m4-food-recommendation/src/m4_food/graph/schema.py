@@ -71,6 +71,7 @@ class RawUserContext:
     is_vegetarian: bool = False
     is_halal: bool = False
     allergies: list[str] = field(default_factory=list)          # e.g. ["nuts", "dairy", "fish"]
+    dislikes: list[str] = field(default_factory=list)           # e.g. ["spicy", "mushrooms"]
     health_conditions: list[str] = field(default_factory=list)  # e.g. ["diabetes", "hypertension"]
     daily_calorie_target: int = 2000
     target_meal_calories: int = 600

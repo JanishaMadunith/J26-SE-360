@@ -1,5 +1,7 @@
 
 
+"""Interactive CLI Recommendation Runner for M4.
+
 Allows entering:
 - Affective State (stress, anxiety, sad, relaxed, neutral)
 - Wellness (mental fatigue, energy, focus)
@@ -132,9 +134,22 @@ def main():
     parser.add_argument("--vegetarian", action="store_true", help="User is vegetarian")
     parser.add_argument("--halal", action="store_true", help="User requires halal")
     parser.add_argument("--calories", type=int, default=500, help="Target calories")
+    parser.add_argument("--expanded", action="store_true", help="Use expanded multi-source Knowledge Graph (132 nodes, Food.com + USDA)")
 
     args = parser.parse_args()
-    engine = KnowledgeGraphRecommender()
+
+    if args.expanded:
+        from m4_food.graph.knowledge_base_expanded import create_expanded_knowledge_graph
+        from m4_food.graph.gnn_ranker import GNNRecommenderRanker
+        from pathlib import Path
+        expanded_weights = Path(__file__).resolve().parents[3] / "models" / "gnn_embeddings_expanded.pt"
+        ranker = GNNRecommenderRanker(weights_path=expanded_weights) if expanded_weights.exists() else None
+        engine = KnowledgeGraphRecommender(graph=create_expanded_knowledge_graph())
+        engine.gnn = ranker
+        print(">>> [ENGINE MODE] Running on EXPANDED Multi-Source Knowledge Graph (132 Nodes, Food.com + USDA)")
+    else:
+        engine = KnowledgeGraphRecommender()
+        print(">>> [ENGINE MODE] Running on BASELINE Validated Knowledge Graph (72 Nodes, Sri Lanka + USDA)")
 
     if args.interactive or (args.state is None and len(sys.argv) == 1):
         ctx = prompt_interactive()

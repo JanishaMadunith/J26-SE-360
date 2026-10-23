@@ -49,6 +49,17 @@ class LightGCN(nn.Module):
         f_vec = final_emb[f_idx]
         return float(torch.dot(u_vec, f_vec).item())
 
+    def cosine_score(self, final_emb: torch.Tensor, u_idx: int, f_idx: int) -> float:
+        """Computes normalized cosine similarity between context node and candidate node."""
+        u_vec = final_emb[u_idx]
+        f_vec = final_emb[f_idx]
+        u_norm = torch.norm(u_vec)
+        f_norm = torch.norm(f_vec)
+        if u_norm == 0.0 or f_norm == 0.0:
+            return 0.0
+        sim = torch.dot(u_vec, f_vec) / (u_norm * f_norm)
+        return float(sim.clamp(-1.0, 1.0).item())
+
 
 class GNNRecommenderRanker:
     """Inference ranker that uses trained GNN embeddings to rank KG candidate meals."""

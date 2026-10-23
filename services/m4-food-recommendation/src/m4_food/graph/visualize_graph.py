@@ -107,6 +107,8 @@ def build_interactive_graph(open_in_browser: bool = True) -> Path:
             f"<b>{node_obj.name}</b>",
             f"<i>Type: {node_obj.node_type.value}</i>",
         ]
+        if "source_db" in props:
+            tooltip_lines.append(f"Provenance: <b>{props['source_db']}</b>" + (f" ({props['source_id']})" if props.get('source_id') else ""))
         if "calories" in props:
             tooltip_lines.append(f"Calories: {props['calories']} kcal")
         if "portion" in props:
@@ -118,8 +120,8 @@ def build_interactive_graph(open_in_browser: bool = True) -> Path:
             tooltip_lines.append("<br><b>USDA Lab Data:</b>")
             for k, v in usda.items():
                 tooltip_lines.append(f"• {k.replace('_', ' ').capitalize()}: {v}")
-        if "bio_rationale" in props:
-            tooltip_lines.append(f"<br>Note: {props['bio_rationale']}")
+        if "provenance_notes" in props and props["provenance_notes"]:
+            tooltip_lines.append(f"<br><i>Notes: {props['provenance_notes']}</i>")
 
         tooltip_html = "<br>".join(tooltip_lines)
 
@@ -139,9 +141,19 @@ def build_interactive_graph(open_in_browser: bool = True) -> Path:
         exp = data.get("explanation", "")
         edge_color = EDGE_COLORS.get(rel, "#B0BEC5")
 
-        tooltip = f"<b>{rel.value if hasattr(rel, 'value') else str(rel)}</b><br>Weight: {weight}"
+        tooltip = f"<b>{rel.value if hasattr(rel, 'value') else str(rel)}</b><br>Baseline Weight: {weight:.2f}"
+        if "heuristic_tier_weight" in data:
+            tooltip += f" <i>(Heuristic Tier: {data['heuristic_tier_weight']:.2f})</i>"
         if exp:
-            tooltip += f"<br>Mechanism: {exp}"
+            tooltip += f"<br>Scientific Basis: {exp}"
+        if "pmid" in data and data["pmid"]:
+            tooltip += f"<br><b>PubMed:</b> PMID {data['pmid']}"
+            if "pmcid" in data and data["pmcid"]:
+                tooltip += f" ({data['pmcid']})"
+        if "evidence_level" in data and data["evidence_level"]:
+            tooltip += f"<br><b>Evidence Level:</b> {data['evidence_level']}"
+        if "guideline" in data and data["guideline"]:
+            tooltip += f"<br><b>Guideline:</b> {data['guideline']}"
 
         width = 1.0 + (weight * 1.5)
         dashes = rel in (RelationType.CONTRAINDICATED_FOR, RelationType.HAS_ALLERGEN)

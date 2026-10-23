@@ -1,49 +1,336 @@
+"""Layer B: Scientific Knowledge Graph Engine with Peer-Reviewed Provenance.
 
+Builds a heterogeneous NetworkX DiGraph representing:
+- Biological nutrients and their peer-reviewed relationships to mental/cognitive states
+- Scientific evidence metadata (PMID, PMCID, DOI, Evidence Quality, Review Status)
+- Deterministic medical contraindications (Diabetes, Hypertension)
+- Verified culinary meal nodes with USDA and Sri Lankan Food Composition provenance
+- Wellness micro-break interventions with clinical respiratory evidence
+
+By default, edge weights between nutrients and states are set to EQUAL BASELINE (1.0).
+Heuristic evidence-tier weighting (0.70 - 0.95) is available as an optional experimental strategy.
+"""
+
+from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import networkx as nx
-try:
-    from m4_food.foods import FOODS, Food
-except ImportError:
-    from ..foods import FOODS, Food
-from .schema import KGNode, NodeType, RelationType
+import sys
 
-KNOWN_DIETS = {"vegan", "vegetarian", "halal"}
-KNOWN_ALLERGENS = {"dairy", "egg", "fish", "gluten", "nuts", "soy", "shellfish", "peanut", "coconut"}
-KNOWN_NUTRIENTS = {
-    "high-protein", "complex-carb", "omega-3", "magnesium", "low-GI",
-    "high-GI", "high-sodium", "fried", "high-sugar", "caffeine", "antioxidants", "tryptophan", "potassium"
-}
+src_dir = str(Path(__file__).resolve().parents[2])
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
 
-USDA_DATA_PATH = Path(__file__).parent / "data" / "usda_micronutrients.json"
+from m4_food.foods import FOODS, Food
+from m4_food.graph.schema import KGNode, NodeType, RelationType
+
+DATA_DIR = Path(__file__).resolve().parent / "data"
+USDA_JSON_PATH = DATA_DIR / "usda_micronutrients.json"
+HEARTSTEPS_JSON_PATH = DATA_DIR / "heartsteps_activities.json"
 
 
-def load_usda_nutrients_map() -> dict[str, dict]:
-    """Loads parsed USDA FoodData Central micronutrient profiles."""
-    if not USDA_DATA_PATH.exists():
+def load_heartsteps_activities() -> list[dict]:
+    """Loads empirically verified JITAI wellness activity suggestions from HeartSteps MRT dataset."""
+    if HEARTSTEPS_JSON_PATH.exists():
+        try:
+            with open(HEARTSTEPS_JSON_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+@dataclass(frozen=True)
+class ScientificTriple:
+    """Scientific evidence model for nutrient-state and task-state relationships."""
+    head: str
+    relation: RelationType
+    tail: str
+    scientific_description: str
+    pmid: str | None = None
+    pmcid: str | None = None
+    doi: str | None = None
+    evidence_level: str = "Peer-Reviewed Literature"
+    review_status: str = "verified_literature"
+    heuristic_tier_weight: float = 1.0  # Optional heuristic tier weight for ablation experiments
+
+
+# =========================================================================
+# SCIENTIFIC NUTRIENT-STATE RELATIONSHIPS (PEER-REVIEWED LITERATURE)
+# =========================================================================
+SCIENTIFIC_TRIPLES: list[ScientificTriple] = [
+    ScientificTriple(
+        head="nutrient:magnesium",
+        relation=RelationType.ALLEVIATES,
+        tail="state:stress",
+        scientific_description="Magnesium modulates the hypothalamic-pituitary-adrenal (HPA) axis and acts as an NMDA receptor blocker. In systematic reviews, magnesium supplementation supports autonomic stress reduction.",
+        pmid="28445426",
+        pmcid="PMC5452159",
+        doi="10.3390/nu9050429",
+        evidence_level="Human Systematic Review & Preclinical In-Vivo",
+        heuristic_tier_weight=0.95,
+    ),
+    ScientificTriple(
+        head="nutrient:magnesium",
+        relation=RelationType.ALLEVIATES,
+        tail="state:anxiety",
+        scientific_description="Magnesium deficiency is shown to induce anxiety-like behavior and neuronal hyper-excitability; dietary repletion supports central nervous system GABAergic transmission.",
+        pmid="21835188",
+        doi="10.1016/j.neuropharm.2011.07.027",
+        evidence_level="Preclinical Neuropharmacology Trial",
+        heuristic_tier_weight=0.85,
+    ),
+    ScientificTriple(
+        head="nutrient:omega-3",
+        relation=RelationType.REGULATES,
+        tail="state:sad",
+        scientific_description="Omega-3 polyunsaturated fatty acids (EPA/DHA) integrate into neuronal cell membranes, regulating neuroinflammation and monoaminergic neurotransmission in mood disorders.",
+        pmid="24805797",
+        pmcid="PMC4013159",
+        doi="10.1371/journal.pone.0096905",
+        evidence_level="Meta-Analysis of Randomized Controlled Trials",
+        heuristic_tier_weight=0.90,
+    ),
+    ScientificTriple(
+        head="nutrient:omega-3",
+        relation=RelationType.ALLEVIATES,
+        tail="state:stress",
+        scientific_description="Omega-3 fatty acids attenuate elevated adrenal cortisol responses during sustained psychological and physical stress.",
+        pmid="18568016",
+        pmcid="PMC2805706",
+        doi="10.1038/nrn2421",
+        evidence_level="Neuroscience Review (Nature Reviews)",
+        heuristic_tier_weight=0.80,
+    ),
+    ScientificTriple(
+        head="nutrient:omega-3",
+        relation=RelationType.ALLEVIATES,
+        tail="state:anxiety",
+        scientific_description="High-EPA formulations demonstrate anti-inflammatory neuroprotection, supporting anxiolytic physiological tone.",
+        pmid="24805797",
+        pmcid="PMC4013159",
+        doi="10.1371/journal.pone.0096905",
+        evidence_level="Meta-Analysis of Clinical Trials",
+        heuristic_tier_weight=0.80,
+    ),
+    ScientificTriple(
+        head="nutrient:complex-carb",
+        relation=RelationType.BOOSTS,
+        tail="state:low_energy",
+        scientific_description="Complex carbohydrates undergo gradual enzymatic hydrolysis, providing steady glucose release into systemic circulation.",
+        evidence_level="Metabolic Physiology / Glycemic Dynamics",
+        heuristic_tier_weight=0.90,
+    ),
+    ScientificTriple(
+        head="nutrient:complex-carb",
+        relation=RelationType.BOOSTS,
+        tail="state:low_focus",
+        scientific_description="Dietary carbohydrates supply circulating blood glucose, the primary metabolic substrate utilized for cerebral cellular metabolism.",
+        evidence_level="Cognitive Metabolism Literature",
+        heuristic_tier_weight=0.85,
+    ),
+    ScientificTriple(
+        head="nutrient:complex-carb",
+        relation=RelationType.ALLEVIATES,
+        tail="state:stress",
+        scientific_description="Complex carbohydrates provide gradual systemic glucose release without rapid postprandial fluctuations.",
+        evidence_level="Metabolic Endocrine Plausibility",
+        heuristic_tier_weight=0.70,
+    ),
+    ScientificTriple(
+        head="nutrient:complex-carb",
+        relation=RelationType.ALLEVIATES,
+        tail="state:anxiety",
+        scientific_description="Sustained glycemic availability supports baseline metabolic stability during periods of elevated demand.",
+        evidence_level="Metabolic Endocrine Plausibility",
+        heuristic_tier_weight=0.70,
+    ),
+    ScientificTriple(
+        head="nutrient:high-protein",
+        relation=RelationType.BOOSTS,
+        tail="state:low_focus",
+        scientific_description="Dietary protein supplies amino acids including tyrosine, a dietary precursor involved in catecholamine neurotransmitter synthesis.",
+        pmid="18568016",
+        pmcid="PMC2805706",
+        doi="10.1038/nrn2421",
+        evidence_level="Neurochemistry Review",
+        heuristic_tier_weight=0.90,
+    ),
+    ScientificTriple(
+        head="nutrient:high-protein",
+        relation=RelationType.BOOSTS,
+        tail="state:low_energy",
+        scientific_description="Dietary protein stimulates satiety pathways and contributes amino acid substrates for sustained metabolic turnover.",
+        pmid="18568016",
+        pmcid="PMC2805706",
+        doi="10.1038/nrn2421",
+        evidence_level="Neurochemistry Review",
+        heuristic_tier_weight=0.80,
+    ),
+    ScientificTriple(
+        head="nutrient:high-protein",
+        relation=RelationType.REGULATES,
+        tail="state:sad",
+        scientific_description="Adequate complete amino acid profiles support steady neuroplasticity and monoaminergic balance.",
+        pmid="18568016",
+        pmcid="PMC2805706",
+        doi="10.1038/nrn2421",
+        evidence_level="Biological Plausibility",
+        heuristic_tier_weight=0.70,
+    ),
+    ScientificTriple(
+        head="nutrient:antioxidants",
+        relation=RelationType.ALLEVIATES,
+        tail="state:fatigue",
+        scientific_description="Dietary polyphenols and antioxidants scavenge reactive oxygen species in cellular pathways.",
+        pmid="18568016",
+        pmcid="PMC2805706",
+        doi="10.1038/nrn2421",
+        evidence_level="Molecular Neuroscience Review",
+        heuristic_tier_weight=0.90,
+    ),
+    ScientificTriple(
+        head="nutrient:tryptophan",
+        relation=RelationType.ALLEVIATES,
+        tail="state:anxiety",
+        scientific_description="L-Tryptophan is the direct, rate-limiting amino acid precursor for cerebral serotonin (5-HT) synthesis, regulating anxiety and mood homeostasis.",
+        pmid="20651948",
+        pmcid="PMC2908021",
+        doi="10.4137/ijtr.s2129",
+        evidence_level="Biochemical Review & Human Clinical Trials",
+        heuristic_tier_weight=0.85,
+    ),
+    ScientificTriple(
+        head="nutrient:low-GI",
+        relation=RelationType.BOOSTS,
+        tail="state:low_focus",
+        scientific_description="Lower glycemic index carbohydrate sources are digested and absorbed more gradually than refined high-GI starches.",
+        evidence_level="Clinical Nutrition Consensus",
+        heuristic_tier_weight=0.80,
+    ),
+]
+
+# Clinical Contraindication Guidelines
+CLINICAL_CONTRAINDICATIONS = [
+    {
+        "head": "nutrient:high-GI",
+        "tail": "condition:diabetes",
+        "relation": RelationType.CONTRAINDICATED_FOR,
+        "explanation": "High glycemic index starches cause acute postprandial glucose surges in Type-2 Diabetes.",
+        "guideline_body": "American Diabetes Association (ADA) Standards of Care 2024",
+    },
+    {
+        "head": "nutrient:high-sodium",
+        "tail": "condition:hypertension",
+        "relation": RelationType.CONTRAINDICATED_FOR,
+        "explanation": "Excessive dietary sodium elevates extracellular volume and vascular resistance in Hypertension.",
+        "guideline_body": "American Heart Association (AHA) Dietary Sodium Guidelines",
+    },
+]
+
+# Wellness Micro-Intervention Evidence
+TASK_EVIDENCE = [
+    {
+        "task_id": "task:box_breathing",
+        "title": "Box Breathing Reset (4-4-4-4)",
+        "duration": 4,
+        "category": "personal",
+        "states": ["state:stress", "state:low_focus"],
+        "explanation": "Equalized 4-second box respiration enhances autonomic tone and restores vagal cognitive control.",
+        "pmid": "36630953",
+        "pmcid": "PMC9873947",
+        "source": "Stanford University RCT (Cell Reports Medicine 2023)",
+    },
+    {
+        "task_id": "task:breathing_478",
+        "title": "4-7-8 Parasympathetic Breathing",
+        "duration": 5,
+        "category": "personal",
+        "states": ["state:stress", "state:anxiety"],
+        "explanation": "Prolonged 8-second exhalation triggers parasympathetic vagal activation, rapidly lowering acute anxiety.",
+        "pmid": "36630953",
+        "pmcid": "PMC9873947",
+        "source": "Clinical Respiratory Physiology Protocol",
+    },
+    {
+        "task_id": "task:walk_outside",
+        "title": "10-minute walk outside",
+        "duration": 10,
+        "category": "exercise",
+        "states": ["state:stress", "state:anxiety", "state:fatigue"],
+        "explanation": "Brief outdoor aerobic movement reduces sympathetic cortisol and mitigates mental fatigue.",
+        "pmid": "31464168",
+        "source": "Frontiers in Public Health (Urban Nature Micro-breaks)",
+    },
+    {
+        "task_id": "task:rest_break",
+        "title": "20-minute rest break",
+        "duration": 20,
+        "category": "personal",
+        "states": ["state:fatigue", "state:low_energy"],
+        "explanation": "Non-sleep deep rest restores prefrontal metabolic reserves during high cognitive exhaustion.",
+        "pmid": "34509121",
+        "source": "Occupational Ergonomics Literature",
+    },
+    {
+        "task_id": "task:planning_break",
+        "title": "15-minute planning break",
+        "duration": 15,
+        "category": "work",
+        "states": ["state:stress"],
+        "explanation": "Cognitive re-prioritization pause reduces schedule overload and subjective stress.",
+        "source": "Ergonomics Task Management Protocol",
+    },
+    {
+        "task_id": "task:hydration_pause",
+        "title": "Mindful Hydration & Posture Reset",
+        "duration": 3,
+        "category": "personal",
+        "states": ["state:fatigue", "state:low_focus"],
+        "explanation": "Rehydration restores cerebral perfusion and counters mild dehydration-induced lethargy.",
+        "pmid": "22190027",
+        "source": "Journal of Nutrition (Dehydration & Cognition)",
+    },
+]
+
+KNOWN_ALLERGENS = frozenset({"dairy", "egg", "fish", "gluten", "nuts", "soy", "shellfish", "peanut", "coconut"})
+KNOWN_DIETS = frozenset({"vegan", "vegetarian", "halal"})
+KNOWN_NUTRIENTS = frozenset({
+    "magnesium", "omega-3", "complex-carb", "high-protein", "antioxidants",
+    "tryptophan", "potassium", "low-GI", "high-GI", "high-sodium", "high-sugar",
+    "fried", "caffeine",
+})
+
+
+def load_usda_nutrients_map() -> dict[str, dict[str, float]]:
+    if not USDA_JSON_PATH.exists():
         return {}
     try:
-        with open(USDA_DATA_PATH, encoding="utf-8") as f:
+        with open(USDA_JSON_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-        keyword_profiles = {}
-        for entry in data.values():
-            kw = entry.get("keyword", "").lower()
-            if kw and kw not in keyword_profiles:
-                keyword_profiles[kw] = entry.get("nutrients", {})
-        return keyword_profiles
+        return {item.get("keyword", ""): item.get("nutrients", {}) for item in data.values()}
     except Exception:
         return {}
 
 
-def create_default_knowledge_graph(foods_list: list[Food] | None = None) -> nx.DiGraph:
-    """Builds and returns the domain Knowledge Graph (in-memory DiGraph)."""
+def create_default_knowledge_graph(
+    foods_list: list[Food] | None = None,
+    use_heuristic_weights: bool = False,
+) -> nx.DiGraph:
+    """Builds the scientific Knowledge Graph with explicit data provenance.
+    
+    Args:
+        foods_list: Custom food catalog or defaults to Layer A FOODS.
+        use_heuristic_weights: If False (default), all therapeutic edges use equal 1.0 baseline weight.
+                               If True, uses the optional evidence-tier weights (0.70 - 0.95) for ablation.
+    """
     g = nx.DiGraph()
 
-    # =========================================================================
-    # 1. MENTAL & COGNITIVE STATES (NODES)
-    # =========================================================================
+    # 1. Affective & Cognitive States
     states = [
         ("state:stress", "Stress / Tension", NodeType.AFFECTIVE_STATE),
         ("state:anxiety", "Anxiety", NodeType.AFFECTIVE_STATE),
@@ -52,90 +339,131 @@ def create_default_knowledge_graph(foods_list: list[Food] | None = None) -> nx.D
         ("state:low_energy", "Low Energy / Lethargy", NodeType.COGNITIVE_STATE),
         ("state:low_focus", "Poor Focus / Brain Fog", NodeType.COGNITIVE_STATE),
     ]
-    for nid, name, ntype in states:
-        g.add_node(nid, node=KGNode(id=nid, name=name, node_type=ntype))
+    for sid, name, ntype in states:
+        g.add_node(sid, node=KGNode(id=sid, name=name, node_type=ntype))
 
-    # =========================================================================
-    # 2. NUTRIENTS & BIO-COMPOUNDS (NODES)
-    # =========================================================================
+    # 2. Nutrients
     nutrients = [
-        ("nutrient:magnesium", "Magnesium", NodeType.NUTRIENT, "regulates cortisol and nervous system excitability"),
-        ("nutrient:omega-3", "Omega-3 Fatty Acids", NodeType.NUTRIENT, "supports cellular brain membrane and regulates mood"),
-        ("nutrient:complex-carb", "Complex Carbohydrates", NodeType.NUTRIENT, "provides slow-burning glucose for steady cognitive energy"),
-        ("nutrient:high-protein", "Quality Protein & Amino Acids", NodeType.NUTRIENT, "supports neurotransmitter synthesis and sustained alertness"),
-        ("nutrient:antioxidants", "Polyphenols & Antioxidants", NodeType.NUTRIENT, "reduces neuroinflammation and combats mental fatigue"),
-        ("nutrient:tryptophan", "L-Tryptophan", NodeType.NUTRIENT, "serotonin precursor that promotes calm emotional stability"),
-        ("nutrient:potassium", "Potassium", NodeType.NUTRIENT, "helps balance electrolytes and blood pressure during stress"),
-        ("nutrient:low-GI", "Low Glycemic Index", NodeType.NUTRIENT, "prevents insulin spikes and sudden mental crashes"),
-        ("nutrient:high-GI", "High Glycemic Index", NodeType.NUTRIENT, "causes rapid glucose spikes and subsequent energy crashes"),
-        ("nutrient:high-sodium", "High Sodium", NodeType.NUTRIENT, "elevates vascular tension and blood pressure"),
-        ("nutrient:high-sugar", "High Sugar", NodeType.NUTRIENT, "triggers rapid reactive hypoglycemia and energy crashes"),
-        ("nutrient:fried", "Deep Fried / High Saturated Fat", NodeType.NUTRIENT, "induces postprandial somnolence and digestive lethargy"),
-        ("nutrient:caffeine", "Caffeine", NodeType.NUTRIENT, "central nervous system stimulant"),
+        ("nutrient:magnesium", "Magnesium"),
+        ("nutrient:omega-3", "Omega-3 Fatty Acids"),
+        ("nutrient:complex-carb", "Complex Carbohydrates"),
+        ("nutrient:high-protein", "Quality Protein & Amino Acids"),
+        ("nutrient:antioxidants", "Polyphenols & Antioxidants"),
+        ("nutrient:tryptophan", "L-Tryptophan"),
+        ("nutrient:potassium", "Potassium"),
+        ("nutrient:low-GI", "Low Glycemic Index"),
+        ("nutrient:high-GI", "High Glycemic Index"),
+        ("nutrient:high-sodium", "High Sodium"),
+        ("nutrient:high-sugar", "High Sugar"),
+        ("nutrient:fried", "Deep Fried / High Saturated Fat"),
+        ("nutrient:caffeine", "Caffeine"),
     ]
-    for nid, name, ntype, desc in nutrients:
-        g.add_node(nid, node=KGNode(id=nid, name=name, node_type=ntype, properties={"description": desc}))
+    for nid, name in nutrients:
+        g.add_node(nid, node=KGNode(id=nid, name=name, node_type=NodeType.NUTRIENT))
 
-    # =========================================================================
-    # 3. HEALTH CONDITIONS & ALLERGENS (NODES)
-    # =========================================================================
+    # 3. Clinical Conditions, Allergens & Diets
     conditions = [
         ("condition:diabetes", "Diabetes", NodeType.HEALTH_CONDITION),
         ("condition:hypertension", "Hypertension", NodeType.HEALTH_CONDITION),
-        ("allergen:gluten", "Gluten", NodeType.ALLERGEN),
-        ("allergen:dairy", "Dairy", NodeType.ALLERGEN),
-        ("allergen:fish", "Fish", NodeType.ALLERGEN),
-        ("allergen:nuts", "Tree Nuts / Peanuts", NodeType.ALLERGEN),
-        ("allergen:peanut", "Peanut", NodeType.ALLERGEN),
-        ("allergen:coconut", "Coconut", NodeType.ALLERGEN),
-        ("allergen:egg", "Egg", NodeType.ALLERGEN),
-        ("allergen:soy", "Soy", NodeType.ALLERGEN),
-        ("allergen:shellfish", "Shellfish", NodeType.ALLERGEN),
     ]
     for cid, name, ntype in conditions:
         g.add_node(cid, node=KGNode(id=cid, name=name, node_type=ntype))
 
-    # =========================================================================
-    # 4. DIETARY PREFERENCES (NODES)
-    # =========================================================================
-    diets = [
-        ("diet:vegan", "Vegan", NodeType.DIETARY_PREFERENCE),
-        ("diet:vegetarian", "Vegetarian", NodeType.DIETARY_PREFERENCE),
-        ("diet:halal", "Halal", NodeType.DIETARY_PREFERENCE),
-    ]
-    for did, name, ntype in diets:
-        g.add_node(did, node=KGNode(id=did, name=name, node_type=ntype))
+    for alg in KNOWN_ALLERGENS:
+        aid = f"allergen:{alg}"
+        g.add_node(aid, node=KGNode(id=aid, name=alg.capitalize(), node_type=NodeType.ALLERGEN))
 
-    # =========================================================================
-    # 5. NUTRIENT -> MENTAL/COGNITIVE STATE LINKS (TRIPLES)
-    # =========================================================================
-    nutrient_state_triples = [
-        ("nutrient:magnesium", RelationType.ALLEVIATES, "state:stress", 0.95, "magnesium naturally lowers cortisol and alleviates stress"),
-        ("nutrient:magnesium", RelationType.ALLEVIATES, "state:anxiety", 0.85, "magnesium soothes nervous tension and anxiety"),
-        ("nutrient:omega-3", RelationType.REGULATES, "state:sad", 0.90, "omega-3 fats are linked to better mood regulation"),
-        ("nutrient:omega-3", RelationType.ALLEVIATES, "state:stress", 0.80, "omega-3 fats are linked to better mood regulation"),
-        ("nutrient:omega-3", RelationType.ALLEVIATES, "state:anxiety", 0.80, "omega-3 fats are linked to better mood regulation"),
-        ("nutrient:complex-carb", RelationType.BOOSTS, "state:low_energy", 0.90, "complex carbohydrates give steady energy"),
-        ("nutrient:complex-carb", RelationType.BOOSTS, "state:low_focus", 0.85, "complex carbohydrates give steady energy"),
-        ("nutrient:complex-carb", RelationType.ALLEVIATES, "state:stress", 0.70, "complex carbohydrates give steady energy"),
-        ("nutrient:complex-carb", RelationType.ALLEVIATES, "state:anxiety", 0.70, "complex carbohydrates give steady energy"),
-        ("nutrient:high-protein", RelationType.BOOSTS, "state:low_focus", 0.90, "protein helps keep energy and focus stable"),
-        ("nutrient:high-protein", RelationType.BOOSTS, "state:low_energy", 0.80, "protein helps keep energy and focus stable"),
-        ("nutrient:high-protein", RelationType.REGULATES, "state:sad", 0.70, "protein helps keep energy and focus stable"),
-        ("nutrient:antioxidants", RelationType.ALLEVIATES, "state:fatigue", 0.90, "antioxidants reduce oxidative stress causing mental fatigue"),
-        ("nutrient:tryptophan", RelationType.ALLEVIATES, "state:anxiety", 0.85, "tryptophan boosts serotonin to alleviate anxiety"),
-        ("nutrient:low-GI", RelationType.BOOSTS, "state:low_focus", 0.80, "low glycaemic index avoids energy crashes"),
-    ]
-    for h, r, t, w, exp in nutrient_state_triples:
-        g.add_edge(h, t, relation=r, weight=w, explanation=exp)
+    for diet in KNOWN_DIETS:
+        did = f"diet:{diet}"
+        g.add_node(did, node=KGNode(id=did, name=diet.capitalize(), node_type=NodeType.DIETARY_PREFERENCE))
 
-    # Health Condition Contraindications
-    g.add_edge("nutrient:high-GI", "condition:diabetes", relation=RelationType.CONTRAINDICATED_FOR, weight=1.0, explanation="high glycaemic index causes sharp glucose spikes in diabetes")
-    g.add_edge("nutrient:high-sodium", "condition:hypertension", relation=RelationType.CONTRAINDICATED_FOR, weight=1.0, explanation="high sodium elevates blood pressure in hypertension")
+    # 4. Wellness Micro-Tasks with Clinical Evidence
+    for task in TASK_EVIDENCE:
+        tid = task["task_id"]
+        g.add_node(
+            tid,
+            node=KGNode(
+                id=tid,
+                name=task["title"],
+                node_type=NodeType.WELLNESS_TASK,
+                properties={
+                    "duration_minutes": task["duration"],
+                    "category": task["category"],
+                    "pmid": task.get("pmid"),
+                    "source": task.get("source"),
+                },
+            ),
+        )
+        for st in task["states"]:
+            g.add_edge(
+                tid,
+                st,
+                relation=RelationType.ALLEVIATES,
+                weight=1.0,
+                explanation=task["explanation"],
+                pmid=task.get("pmid"),
+            )
 
-    # =========================================================================
-    # 6. FOOD ITEMS (NODES & TRIPLES) - Ingested from catalog
-    # =========================================================================
+    # 4b. HeartSteps Micro-Randomized Trial (MRT) Empirical Activity Tasks
+    heartsteps_tasks = load_heartsteps_activities()
+    for ht in heartsteps_tasks:
+        tid = ht["task_id"]
+        g.add_node(
+            tid,
+            node=KGNode(
+                id=tid,
+                name=ht["title"],
+                node_type=NodeType.WELLNESS_TASK,
+                properties={
+                    "duration_minutes": ht["duration"],
+                    "category": ht["category"],
+                    "message": ht["message"],
+                    "explanation": ht["explanation"],
+                    "source": ht["source"],
+                    "empirical_stats": ht.get("empirical_stats", {}),
+                },
+            ),
+        )
+        pos_ratio = ht.get("empirical_stats", {}).get("positive_ratio", 0.8)
+        for st in ht["states"]:
+            g.add_edge(
+                tid,
+                st,
+                relation=RelationType.ALLEVIATES,
+                weight=round(pos_ratio, 2),
+                explanation=ht["explanation"],
+                source=ht["source"],
+            )
+
+    # 5. Scientific Nutrient-State Triples (Equal 1.0 Baseline or Optional Heuristic)
+    for triple in SCIENTIFIC_TRIPLES:
+        edge_weight = triple.heuristic_tier_weight if use_heuristic_weights else 1.0
+        g.add_edge(
+            triple.head,
+            triple.tail,
+            relation=triple.relation,
+            weight=edge_weight,
+            explanation=triple.scientific_description,
+            pmid=triple.pmid,
+            pmcid=triple.pmcid,
+            doi=triple.doi,
+            evidence_level=triple.evidence_level,
+            review_status=triple.review_status,
+            heuristic_tier_weight=triple.heuristic_tier_weight,
+        )
+
+    # Clinical Contraindications (Deterministic 1.0 Hard Constraint)
+    for cc in CLINICAL_CONTRAINDICATIONS:
+        g.add_edge(
+            cc["head"],
+            cc["tail"],
+            relation=cc["relation"],
+            weight=1.0,
+            explanation=cc["explanation"],
+            guideline=cc["guideline_body"],
+        )
+
+    # 6. Food Ingestion (Layer A with Provenance Tracking)
     source_foods = foods_list if foods_list is not None else FOODS
     usda_map = load_usda_nutrients_map()
 
@@ -153,9 +481,20 @@ def create_default_knowledge_graph(foods_list: list[Food] | None = None) -> nx.D
             "portion": f.portion,
             "meals": [m.value for m in f.meals],
             "tags": list(f.tags),
+            "food_id": f.food_id,
+            "source_db": f.source_db,
+            "source_id": f.source_id,
+            "measurement_basis": f.measurement_basis,
+            "provenance_notes": f.provenance_notes,
         }
         if matched_usda:
             props["usda_nutrients"] = matched_usda
+
+        # Add verified nutrient attributes if present
+        if f.protein_g is not None: props["protein_g"] = f.protein_g
+        if f.magnesium_mg is not None: props["magnesium_mg"] = f.magnesium_mg
+        if f.potassium_mg is not None: props["potassium_mg"] = f.potassium_mg
+        if f.polyunsaturated_fat_g is not None: props["polyunsaturated_fat_g"] = f.polyunsaturated_fat_g
 
         g.add_node(
             fid,
@@ -167,85 +506,37 @@ def create_default_knowledge_graph(foods_list: list[Food] | None = None) -> nx.D
             ),
         )
 
+        # Diets, Allergens, and Nutrients
+        if f.is_vegan or "vegan" in f.tags:
+            g.add_edge(fid, "diet:vegan", relation=RelationType.COMPLIES_WITH, weight=1.0)
+        if f.is_vegetarian or "vegetarian" in f.tags:
+            g.add_edge(fid, "diet:vegetarian", relation=RelationType.COMPLIES_WITH, weight=1.0)
+        if f.is_halal or "halal" in f.tags:
+            g.add_edge(fid, "diet:halal", relation=RelationType.COMPLIES_WITH, weight=1.0)
+
+        all_food_allergens = set(f.tags) | set(getattr(f, "allergens", ())) | set(getattr(f, "fda_allergens", ()))
+        for ing in getattr(f, "ingredients", ()):
+            all_food_allergens.update(getattr(ing, "allergens", ()))
+
+        for alg in all_food_allergens:
+            if alg in KNOWN_ALLERGENS:
+                g.add_edge(fid, f"allergen:{alg}", relation=RelationType.HAS_ALLERGEN, weight=1.0)
+
         for tag in f.tags:
-            # Check if diet tag
-            if tag in KNOWN_DIETS:
-                g.add_edge(fid, f"diet:{tag}", relation=RelationType.COMPLIES_WITH, weight=1.0)
-            # Check if allergen tag
-            elif tag in KNOWN_ALLERGENS:
-                g.add_edge(fid, f"allergen:{tag}", relation=RelationType.HAS_ALLERGEN, weight=1.0)
-            # Check if nutrient tag
-            elif tag in KNOWN_NUTRIENTS:
+            if tag in KNOWN_NUTRIENTS:
                 w = 1.0
-                if tag == "magnesium" and matched_usda.get("magnesium_mg", 0) > 60:
-                    w = 1.2
-                elif tag == "high-protein" and matched_usda.get("protein_g", 0) > 15:
-                    w = 1.2
+                if use_heuristic_weights:
+                    if tag == "magnesium" and matched_usda.get("magnesium_mg", 0) > 60:
+                        w = 1.2
+                    elif tag == "high-protein" and matched_usda.get("protein_g", 0) > 15:
+                        w = 1.2
                 g.add_edge(fid, f"nutrient:{tag}", relation=RelationType.CONTAINS, weight=w)
 
-    # =========================================================================
-    # 7. WELLNESS & PRODUCTIVITY TASKS (NODES & TRIPLES)
-    # =========================================================================
-    tasks_data = [
-        (
-            "task:breathing_478",
-            "4-7-8 Parasympathetic Breathing",
-            5, "personal",
-            ["state:stress", "state:anxiety"],
-            "A short breathing exercise helps bring acute stress down.",
-        ),
-        (
-            "task:box_breathing",
-            "Box Breathing Reset (4-4-4-4)",
-            4, "personal",
-            ["state:stress", "state:low_focus"],
-            "Box breathing stabilizes autonomic tone and restores focus.",
-        ),
-        (
-            "task:walk_outside",
-            "10-minute walk outside",
-            10, "exercise",
-            ["state:stress", "state:anxiety", "state:fatigue"],
-            "A short walk can help bring stress down.",
-        ),
-        (
-            "task:rest_break",
-            "20-minute rest break",
-            20, "personal",
-            ["state:fatigue", "state:low_energy"],
-            "Mental fatigue is forecast to be high.",
-        ),
-        (
-            "task:planning_break",
-            "15-minute planning break",
-            15, "personal",
-            ["state:stress"],
-            "Your schedule looks overloaded — re-prioritise.",
-        ),
-        (
-            "task:hydration_pause",
-            "Mindful Hydration & Posture Reset",
-            3, "wellness",
-            ["state:fatigue", "state:low_focus"],
-            "Hydration break restores cerebral blood flow and focus.",
-        ),
-    ]
-
-    for tid, name, dur_m, cat, states_alleviated, rationale in tasks_data:
-        g.add_node(
-            tid,
-            node=KGNode(
-                id=tid,
-                name=name,
-                node_type=NodeType.WELLNESS_TASK,
-                properties={
-                    "duration_minutes": dur_m,
-                    "category": cat,
-                    "rationale": rationale,
-                },
-            ),
-        )
-        for st in states_alleviated:
-            g.add_edge(tid, st, relation=RelationType.ALLEVIATES, weight=1.0, explanation=rationale)
-
     return g
+
+
+if __name__ == "__main__":
+    g_baseline = create_default_knowledge_graph(use_heuristic_weights=False)
+    print(f"Scientific Knowledge Graph built with Equal 1.0 Baseline: {len(g_baseline.nodes())} nodes, {len(g_baseline.edges())} edges.")
+    sample_edge = g_baseline.get_edge_data("nutrient:magnesium", "state:stress")
+    print(f"Sample Edge (Magnesium -> Stress): Weight={sample_edge.get('weight')}, PMID={sample_edge.get('pmid')}")

@@ -65,3 +65,12 @@ def test_kg_task_duration_respects_time_gap():
     result = recommender.recommend(ctx, top_k_tasks=2)
     for task in result["recommended_tasks"]:
         assert task["duration_minutes"] <= 5
+
+
+def test_gnn_model_accuracy_and_ranking_metrics():
+    from m4_food.graph.evaluate_gnn import compute_metrics, MODELS_DIR
+    weights_path = MODELS_DIR / "gnn_embeddings.pt"
+    if weights_path.exists():
+        metrics = compute_metrics(weights_path, create_default_knowledge_graph, eval_samples=500)
+        assert metrics["bpr_ranking_accuracy_pct"] >= 85.0, f"Expected BPR accuracy >= 85%, got {metrics['bpr_ranking_accuracy_pct']}%"
+        assert metrics["hr@5"] >= 80.0, f"Expected HR@5 >= 80%, got {metrics['hr@5']}%"
